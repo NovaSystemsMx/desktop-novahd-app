@@ -1,0 +1,27 @@
+# CHANGELOG — Nova Hub Downloader
+
+## v0.3 — UI sincronizada + estado vivo
+
+- Headers de ambas tablas a 41px exactos, mismo fondo y divisor.
+- Contador de cola suelto (`COLA DE DESCARGAS • N`), sin paréntesis.
+- Pill "En cola" del mismo tamaño que "Descargar" (36px).
+- Barra de estado refleja búsqueda, cola y avisos ("Agregado a la cola").
+- Sin snackbars; sin menciones de calidad en estados de cola.
+- Marca "Nova Hub" (sidebar, barra, ventana nativa, exe) y versión v0.3.
+- Tablas vacías a alto completo con leyenda; headers fijos con scroll.
+- Destino: carpeta Descargas directa (sin subcarpeta).
+
+## v0.2 — Réplica del pipeline Python
+
+- Búsqueda vía `youtubei/v1/search` idéntica a `ytmusicapi 1.11.5`
+  (params, versión dinámica, continuations hasta 15, parseo por runs).
+- Álbum y duración nativos en filas; relleno de duraciones vía `player`.
+- Descarga `bestaudio/best` a MP3 máxima calidad + reintento android.
+- Etiquetado ID3v2.3 propio (título/artista/álbum/caratula HD).
+- Resolución de binarios por ruta absoluta; sin `cookies.txt`.
+- Cola lateral con progreso real y reintentos.
+
+## v0.1 — Esqueleto
+
+- Sidebar + vista Spotify (buscador, tabla, cola) + tema One Dark Pro.
+- Búsqueda mock/API y descarga simulada o vía yt-dlp básica.
