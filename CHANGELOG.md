@@ -1,5 +1,19 @@
 # CHANGELOG — Nova Hub Downloader
 
+## v0.4 — Sistema de color + headers sincronizados
+
+- Azul `#5F7EA6` como color primario (botones con texto oscuro,
+  progreso, foco, logo, bordes activos, avisos).
+- Verde/amarillo/rojo solo para estados de descarga y errores.
+- Headers de ambas tablas a 41px exactos, mismo fondo y divisor.
+- Botón Descargar 44px, pill "En cola" 36px; hover + clic en fila.
+- Barra de estado con avisos transitorios (adiós snackbars).
+- Contador de cola suelto en gris con punto medio.
+- Scroll pegado al borde, thumb 8px, sin riel visible.
+- Destino: carpeta Descargas directa (sin subcarpeta).
+- Título nativo "Nova Hub Downloader" (ventana + exe).
+- Paleta recortada a 13 colores (fuera spotify/purple/cyan/orange).
+
 ## v0.3 — UI sincronizada + estado vivo
 
 - Headers de ambas tablas a 41px exactos, mismo fondo y divisor.

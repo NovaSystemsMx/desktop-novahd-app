@@ -23,7 +23,7 @@ class StatusBar extends StatelessWidget {
         Color dot;
         if (dl.notice != null) {
           text = dl.notice!;
-          dot = OneDarkPro.green;
+          dot = OneDarkPro.blue;
         } else if (downloading > 0) {
           final total = downloading + queued;
           text = total > 1
@@ -50,7 +50,7 @@ class StatusBar extends StatelessWidget {
           text = sp.lastResultCount == 1
               ? "1 resultado para '${sp.lastQuery}'"
               : "${sp.lastResultCount} resultados para '${sp.lastQuery}'";
-          dot = OneDarkPro.green;
+          dot = OneDarkPro.blue;
         } else if (completed > 0) {
           text = completed == 1
               ? '1 archivo descargado'
@@ -58,7 +58,7 @@ class StatusBar extends StatelessWidget {
           dot = OneDarkPro.green;
         } else {
           text = 'Listo para buscar';
-          dot = OneDarkPro.green;
+          dot = OneDarkPro.blue;
         }
 
         return Container(

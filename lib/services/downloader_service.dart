@@ -246,7 +246,7 @@ class DownloaderService extends ChangeNotifier {
         mp3.path == finalPath ? mp3 : await _safeRename(mp3, finalPath);
 
     // 3) Etiquetado ID3 (como mutagen): título, artista, álbum + carátula HD.
-    task.message = 'Etiquetando MP3 (título, artista, carátula HD)…';
+    task.message = 'Etiquetando MP3…';
     notifyListeners();
     await _tagMp3(finalFile.path, task.track);
 

@@ -13,20 +13,15 @@ abstract class OneDarkPro {
   static const fgDim = Color(0xFF7F848E);
   static const white = Color(0xFFD7DAE0);
 
-  static const green = Color(0xFF98C379);
-  static const blue = Color(0xFF61AFEF);
-  static const purple = Color(0xFFC678DD);
-  static const red = Color(0xFFE06C75);
-  static const yellow = Color(0xFFE5C07B);
-  static const cyan = Color(0xFF56B6C2);
-  static const orange = Color(0xFFD19A66);
-
-  static const spotify = Color(0xFF1DB954);
+  static const green  = Color(0xFF6C9C54);
+  static const blue   = Color(0xFF5F7EA6);
+  static const red    = Color(0xFFA35C62);
+  static const yellow = Color(0xFFA38B5C);
 }
 
 ThemeData buildNovadhTheme() {
   final scheme = const ColorScheme.dark(
-    primary: OneDarkPro.green,
+    primary: OneDarkPro.blue,
     secondary: OneDarkPro.blue,
     surface: OneDarkPro.card,
     error: OneDarkPro.red,
@@ -66,13 +61,13 @@ ThemeData buildNovadhTheme() {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: OneDarkPro.green, width: 1.4),
+        borderSide: const BorderSide(color: OneDarkPro.blue, width: 1.4),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: OneDarkPro.green,
+        backgroundColor: OneDarkPro.blue,
         foregroundColor: const Color(0xFF1B1E23),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -85,14 +80,17 @@ ThemeData buildNovadhTheme() {
       ),
     ),
     progressIndicatorTheme: const ProgressIndicatorThemeData(
-      color: OneDarkPro.green,
+      color: OneDarkPro.blue,
       linearTrackColor: OneDarkPro.border,
     ),
     scrollbarTheme: ScrollbarThemeData(
-      thumbColor: WidgetStateProperty.all(const Color(0xFF3E4451)),
+      thumbVisibility: WidgetStateProperty.all(true),
+      thumbColor: WidgetStateProperty.all(OneDarkPro.cardHover),
       trackColor: WidgetStateProperty.all(Colors.transparent),
       radius: const Radius.circular(8),
       thickness: WidgetStateProperty.all(8),
+      mainAxisMargin: 4,
+      crossAxisMargin: 0,
       minThumbLength: 40,
     ),
   );

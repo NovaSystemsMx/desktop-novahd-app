@@ -31,12 +31,12 @@ class Sidebar extends StatelessWidget {
                   width: 34,
                   height: 34,
                   decoration: BoxDecoration(
-                    color: OneDarkPro.green.withValues(alpha: 0.15),
+                    color: OneDarkPro.blue.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: OneDarkPro.green.withValues(alpha: 0.4)),
+                    border: Border.all(color: OneDarkPro.blue.withValues(alpha: 0.4)),
                   ),
                   child: const Icon(Icons.download_rounded,
-                      color: OneDarkPro.green, size: 20),
+                      color: OneDarkPro.blue, size: 20),
                 ),
                 const SizedBox(width: 10),
                 const Column(
@@ -67,7 +67,7 @@ class Sidebar extends StatelessWidget {
           _item(
             context,
             icon: Icons.music_note_rounded,
-            color: OneDarkPro.spotify,
+            color: OneDarkPro.blue,
             label: 'Spotify',
             subtitle: 'Downloader activo',
             active: selected == PlatformTab.spotify,
@@ -101,7 +101,7 @@ class Sidebar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text('Nova Hub v0.3 · Windows',
+                const Text('Nova Hub v0.4 · Windows',
                     textAlign: TextAlign.center,
                     style:
                         TextStyle(color: OneDarkPro.fgDim, fontSize: 11)),
@@ -131,7 +131,7 @@ class Sidebar extends StatelessWidget {
             color: active ? OneDarkPro.card : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-                color: active ? OneDarkPro.green.withValues(alpha: 0.45) : Colors.transparent),
+                color: active ? OneDarkPro.blue.withValues(alpha: 0.45) : Colors.transparent),
           ),
           child: Row(
             children: [
@@ -156,7 +156,7 @@ class Sidebar extends StatelessWidget {
                   width: 8,
                   height: 8,
                   decoration: const BoxDecoration(
-                      color: OneDarkPro.spotify, shape: BoxShape.circle)),
+                      color: OneDarkPro.blue, shape: BoxShape.circle)),
             ],
           ),
         ),

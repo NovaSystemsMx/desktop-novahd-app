@@ -73,11 +73,11 @@ class _SpotifyViewState extends State<SpotifyView> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: OneDarkPro.spotify.withValues(alpha: 0.15),
+                  color: OneDarkPro.blue.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.music_note_rounded,
-                    color: OneDarkPro.spotify),
+                    color: OneDarkPro.blue),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -127,7 +127,8 @@ class _SpotifyViewState extends State<SpotifyView> {
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.black87))
+                                strokeWidth: 2,
+                                color: OneDarkPro.darker))
                         : const Icon(Icons.search_rounded, size: 20),
                   ),
                 ),

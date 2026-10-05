@@ -174,22 +174,22 @@ class ResultsTable extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 10),
                               decoration: BoxDecoration(
-                                color: OneDarkPro.green
+                                color: OneDarkPro.blue
                                     .withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                    color: OneDarkPro.green
+                                    color: OneDarkPro.blue
                                         .withValues(alpha: 0.4)),
                               ),
                               child: const Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(Icons.check_circle_rounded,
-                                      color: OneDarkPro.green, size: 16),
+                                      color: OneDarkPro.blue, size: 16),
                                   SizedBox(width: 6),
                                   Text('En cola',
                                       style: TextStyle(
-                                          color: OneDarkPro.green,
+                                          color: OneDarkPro.blue,
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600)),
                                 ],
@@ -203,8 +203,8 @@ class ResultsTable extends StatelessWidget {
                                   style: TextStyle(fontSize: 12)),
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 14, vertical: 10),
-                                minimumSize: const Size(0, 36),
+                                    horizontal: 14, vertical: 14),
+                                minimumSize: const Size(0, 44),
                                 tapTargetSize:
                                     MaterialTapTargetSize.shrinkWrap,
                               ),

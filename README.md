@@ -1,4 +1,4 @@
-# Nova Hub Downloader — v0.3 (Windows + Flutter)
+# Nova Hub Downloader — v0.4 (Windows + Flutter)
 
 Downloader de escritorio para Windows. Módulo actual: **Spotify**
 (búsqueda y metadatos vía YouTube Music, réplica del pipeline Python
@@ -9,8 +9,12 @@ Downloader de escritorio para Windows. Módulo actual: **Spotify**
 - Sidebar con plataformas: Spotify activo; YouTube Music, SoundCloud y
   Deezer como "Próximamente".
 - Buscador con tabla de resultados (portada, título/artista, álbum,
-  duración, acción) y cola de descargas lateral con progreso real.
-- Tema One Dark Pro, barra de estado persistente, tooltips en acciones.
+  duración, acción con header fijo) y cola de descargas lateral con
+  progreso real, iconos con tooltip y ruta destino como pie.
+- Barra de estado persistente: refleja búsquedas, cola y avisos
+  ("Agregado a la cola") sin popups.
+- Tema One Dark Pro con azul `#5F7EA6` como color primario; verde,
+  amarillo y rojo solo para estados de descarga y errores.
 - Destino: carpeta Descargas de Windows (`%USERPROFILE%\Downloads`),
   archivos `Artista - Título.mp3`.
 
@@ -59,16 +63,16 @@ flutter build windows --debug   # exe en build\windows\x64\runner\Debug\
 lib/
   main.dart
   app.dart                        # shell: sidebar + vista + status bar
-  theme/one_dark_pro.dart         # paleta One Dark Pro
+  theme/one_dark_pro.dart         # paleta + primario azul #5F7EA6
   models/track.dart               # pista + copyWith + safeFileName
   models/download_task.dart       # tarea de cola + estados
-  services/spotify_service.dart   # orquesta busqueda + Spotify API opcional
+  services/spotify_service.dart   # orquesta busqueda + estado global
   services/ytmusic_service.dart   # replica ytmusicapi (search/continuations/player)
-  services/downloader_service.dart# cola + yt-dlp + etiquetado
+  services/downloader_service.dart# cola + yt-dlp + etiquetado + avisos
   services/audio_tagger.dart      # ID3v2.3 (equivale a mutagen)
   services/binaries.dart          # localiza yt-dlp/ffmpeg
   widgets/sidebar.dart
-  widgets/results_table.dart      # header fijo + scroll + hover
+  widgets/results_table.dart      # header fijo + scroll + hover + pill
   widgets/download_queue_panel.dart
   widgets/status_bar.dart
   views/spotify_view.dart

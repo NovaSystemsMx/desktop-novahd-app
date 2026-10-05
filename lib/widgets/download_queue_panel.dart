@@ -77,7 +77,7 @@ class DownloadQueuePanel extends StatelessWidget {
                             onPressed: dl.openDownloadsFolder,
                             icon: const Icon(Icons.folder_open_rounded,
                                 size: 16),
-                            color: OneDarkPro.green,
+                            color: OneDarkPro.blue,
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(
                                 minWidth: 24, minHeight: 24),
@@ -127,13 +127,15 @@ class DownloadQueuePanel extends StatelessWidget {
                 else
                   Expanded(
                     child: ListView.separated(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
                       itemCount: q.length,
                       separatorBuilder: (_, _) =>
                           const SizedBox(height: 8),
-                      itemBuilder: (context, i) =>
-                          _QueueTile(task: q[i]),
+                      itemBuilder: (context, i) => Padding(
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 16),
+                        child: _QueueTile(task: q[i]),
+                      ),
                     ),
                   ),
                 const Divider(height: 1),
