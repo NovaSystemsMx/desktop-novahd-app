@@ -67,7 +67,7 @@ class YouTubeMusicService {
               throw Exception('YouTube Music no respondió a tiempo.'),
         );
     if (res.statusCode != 200) {
-      throw Exception('YouTube Music respondió ${res.statusCode}.');
+      throw Exception('YouTube Music no disponible.');
     }
     final data = jsonDecode(res.body);
     final tracks = _parseSongs(data);

@@ -33,6 +33,10 @@ class DownloaderService extends ChangeNotifier {
 
   String? _ytDlpPath;
 
+  /// Proceso de descarga en curso (para cancelarlo al quitar la tarea).
+  Process? _activeProcess;
+  String? _activeTaskId;
+
   String? _notice;
 
   /// Aviso transitorio (ej. "Agregado a la cola") que muestra la status bar.
@@ -93,7 +97,14 @@ class DownloaderService extends ChangeNotifier {
   }
 
   void remove(String taskId) {
+    final task = _queue.where((t) => t.id == taskId).toList();
+    final wasActive = task.any((t) =>
+        t.status == DownloadStatus.downloading && t.id == _activeTaskId);
     _queue.removeWhere((t) => t.id == taskId);
+    if (wasActive) {
+      _killActive();
+      _setNotice('Descarga cancelada.');
+    }
     notifyListeners();
   }
 
@@ -107,6 +118,7 @@ class DownloaderService extends ChangeNotifier {
   void retry(DownloadTask task) {
     task.status = DownloadStatus.queued;
     task.progress = 0;
+    task.attempts = 0;
     task.message = 'En cola';
     notifyListeners();
     _processQueue();
@@ -159,22 +171,63 @@ class DownloaderService extends ChangeNotifier {
     return _ytDlpAvailable;
   }
 
+  /// Mata el proceso de descarga en curso y su árbol (ffmpeg hijo).
+  void _killActive() {
+    final proc = _activeProcess;
+    _activeProcess = null;
+    _activeTaskId = null;
+    if (proc == null) return;
+    try {
+      proc.kill();
+    } catch (_) {}
+    if (Platform.isWindows) {
+      try {
+        Process.run(
+            'taskkill', ['/PID', '${proc.pid}', '/T', '/F']).timeout(
+          const Duration(seconds: 5),
+        );
+      } catch (_) {}
+    }
+  }
+
   Future<void> _download(DownloadTask task) async {
     task.status = DownloadStatus.downloading;
     task.progress = 0;
-    task.message = 'Preparando…';
+    task.attempts = 0;
+    task.message = 'Preparando...';
     notifyListeners();
 
     if (!await _hasYtDlp()) {
       _missingEngine(task);
       return;
     }
-    try {
-      await _downloadWithYtDlp(task);
-    } catch (e) {
-      task.status = DownloadStatus.failed;
-      task.message = 'Error: $e';
-      notifyListeners();
+    // Reintento progresivo: 3 intentos con esperas de 5s y 15s.
+    const maxAttempts = 3;
+    const backoffs = [Duration(seconds: 5), Duration(seconds: 15)];
+    while (true) {
+      // Si el usuario quitó la tarea (canceló), no seguir.
+      if (!_queue.any((t) => t.id == task.id)) return;
+      task.attempts++;
+      try {
+        await _downloadWithYtDlp(task);
+        return;
+      } catch (_) {
+        if (!_queue.any((t) => t.id == task.id)) return;
+        if (task.attempts >= maxAttempts) {
+          task.status = DownloadStatus.failed;
+          task.progress = 0;
+          task.message =
+              'No se pudo descargar tras 3 intentos. Revisa tu conexión.';
+          notifyListeners();
+          return;
+        }
+        final wait = backoffs[(task.attempts - 1)
+            .clamp(0, backoffs.length - 1)];
+        task.message =
+            'Reintentando en ${wait.inSeconds}s (intento ${task.attempts + 1}/$maxAttempts)...';
+        notifyListeners();
+        await Future.delayed(wait);
+      }
     }
   }
 
@@ -183,7 +236,7 @@ class DownloaderService extends ChangeNotifier {
   void _missingEngine(DownloadTask task) {
     task.status = DownloadStatus.failed;
     task.progress = 0;
-    task.message = 'No se encontró yt-dlp en el equipo. Reinstálalo y reintenta.';
+    task.message = 'No se encontro yt-dlp en el equipo. Reinstalalo y reintenta.';
     notifyListeners();
   }
 
@@ -220,6 +273,8 @@ class DownloaderService extends ChangeNotifier {
 
     // Foto de los mp3 existentes para identificar el recién generado.
     final before = await _listMp3Paths(dir);
+    // Foto de TODOS los archivos para limpiar parciales si se cancela.
+    final beforeAll = await _listAllPaths(dir);
 
     var exit = await _runYtDlp(args, task);
     if (exit != 0) {
@@ -234,6 +289,13 @@ class DownloaderService extends ChangeNotifier {
     }
     if (exit != 0) {
       throw Exception('yt-dlp salió con código $exit');
+    }
+
+    // Si se canceló mientras descargaba/convertía, no tocar nada más:
+    // limpia parciales (.part, .webm/mp3 truncados, temporales) y sale.
+    if (!_queue.any((t) => t.id == task.id)) {
+      await _cleanupNewFiles(dir, beforeAll);
+      return;
     }
 
     // Localiza el mp3 recién generado (ignora los que ya existían).
@@ -261,8 +323,13 @@ class DownloaderService extends ChangeNotifier {
   /// Devuelve el código de salida.
   Future<int> _runYtDlp(List<String> args, DownloadTask task) async {
     final proc = await Process.start(_ytDlpPath ?? 'yt-dlp', args);
+    _activeProcess = proc;
+    _activeTaskId = task.id;
 
-    proc.stdout.transform(utf8.decoder).listen((chunk) {
+    // La salida de yt-dlp en consola Windows puede traer bytes no UTF-8
+    // (tildes en títulos): se decodifica de forma tolerante.
+    const outputDecoder = Utf8Decoder(allowMalformed: true);
+    proc.stdout.transform(outputDecoder).listen((chunk) {
       // yt-dlp imprime "[download]  45.2% ..." — extraemos el porcentaje.
       final m = RegExp(r'(\d{1,3}(?:\.\d+)?)%').firstMatch(chunk);
       if (m != null) {
@@ -275,9 +342,41 @@ class DownloaderService extends ChangeNotifier {
         }
       }
     });
-    proc.stderr.transform(utf8.decoder).listen((_) {});
+    proc.stderr.transform(outputDecoder).listen((_) {});
 
-    return proc.exitCode;
+    try {
+      return await proc.exitCode;
+    } finally {
+      if (_activeTaskId == task.id) {
+        _activeProcess = null;
+        _activeTaskId = null;
+      }
+    }
+  }
+
+  /// Borra los archivos que yt-dlp/ffmpeg dejaron a medias tras cancelar.
+  /// Solo se usa al cancelar (en fallo se conservan para reanudar).
+  Future<void> _cleanupNewFiles(
+      Directory dir, Set<String> beforeAll) async {
+    try {
+      await for (final e in dir.list()) {
+        if (e is File && !beforeAll.contains(e.path)) {
+          try {
+            await e.delete();
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<Set<String>> _listAllPaths(Directory dir) async {
+    final paths = <String>{};
+    try {
+      await for (final e in dir.list()) {
+        if (e is File) paths.add(e.path);
+      }
+    } catch (_) {}
+    return paths;
   }
 
   Future<Set<String>> _listMp3Paths(Directory dir) async {

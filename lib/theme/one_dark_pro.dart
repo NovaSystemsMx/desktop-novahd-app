@@ -95,3 +95,32 @@ ThemeData buildNovadhTheme() {
     ),
   );
 }
+
+/// Escala tipográfica (5 niveles, una sola familia base).
+/// Los tamaños fuera de escala se expresan con copyWith sobre el nivel base.
+abstract class AppText {
+  /// Hero 18/w800: título principal de vista.
+  static const hero = TextStyle(
+      color: OneDarkPro.white, fontSize: 18, fontWeight: FontWeight.w800);
+
+  /// Título 13.5/w600: canciones, items, títulos de panel.
+  static const title = TextStyle(
+      color: OneDarkPro.white, fontSize: 13.5, fontWeight: FontWeight.w600);
+
+  /// Cuerpo 12: texto funcional (botones, inputs, álbumes).
+  static const body = TextStyle(color: OneDarkPro.fg, fontSize: 12);
+
+  /// Entrada 14: texto del campo de búsqueda (hero de la vista).
+  static const input = TextStyle(color: OneDarkPro.fg, fontSize: 14);
+
+  /// Secundario 12.5: artistas, hints, mensajes.
+  static const secondary =
+      TextStyle(color: OneDarkPro.fgDim, fontSize: 12.5);
+
+  /// Etiqueta 11/w700 con tracking: headers, badges, secciones.
+  static const caps = TextStyle(
+      color: OneDarkPro.fgDim,
+      fontSize: 11,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.8);
+}

@@ -80,8 +80,8 @@ class StatusBar extends StatelessWidget {
                 child: Text(text,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        color: OneDarkPro.fgDim, fontSize: 12)),
+                    style: AppText.secondary
+                        .copyWith(fontSize: 12)),
               ),
             ],
           ),
