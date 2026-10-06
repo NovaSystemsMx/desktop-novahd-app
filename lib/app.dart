@@ -44,7 +44,7 @@ class _NovadhAppShellState extends State<NovadhAppShell> {
                       Icon(Icons.download_rounded,
                           size: 14, color: OneDarkPro.blue),
                       SizedBox(width: 8),
-                      Text('Nova Hub Downloader - Windows v0.4',
+                      Text('Nova Hub Downloader - Windows v0.5',
                           style: AppText.secondary
                               .copyWith(fontSize: 12)),
                     ],
