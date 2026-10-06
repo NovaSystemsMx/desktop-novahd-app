@@ -57,12 +57,25 @@ class Track {
   }
 
   /// Nombre de archivo seguro para Windows.
+  /// Quita caracteres ilegales y emojis (como el pipeline Python),
+  /// conservando letras de cualquier idioma.
   String get safeFileName {
     final base = '$artistsLabel - $title';
-    final cleaned = base.replaceAll(RegExp(r'[<>:"/\\|?*\x00-\x1F]'), '').trim();
+    var cleaned = base.replaceAll(RegExp(r'[<>:"/\\|?*\x00-\x1F]'), '');
+    cleaned = _stripEmojis(cleaned).trim();
+    cleaned = cleaned.replaceAll(RegExp(r'\s+'), ' ');
     if (cleaned.isEmpty) return 'track_$id';
     return cleaned.length > 120 ? cleaned.substring(0, 120).trim() : cleaned;
   }
+
+  static final _emojiPattern = RegExp(
+    '[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}'
+    '\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{2190}-\u{21FF}'
+    '\u{2300}-\u{23FF}\u{2C00}-\u{2C5F}\u{1F000}-\u{1F2FF}]',
+    unicode: true,
+  );
+
+  static String _stripEmojis(String s) => s.replaceAll(_emojiPattern, '');
 
   /// Término de búsqueda para localizar el audio en YouTube.
   String get youtubeQuery => '$artistsLabel - $title audio';

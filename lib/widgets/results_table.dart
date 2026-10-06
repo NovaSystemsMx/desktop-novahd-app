@@ -50,7 +50,7 @@ class ResultsTable extends StatelessWidget {
                     child: Text(
                       'Busca una cancion, artista o album para ver resultados.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: OneDarkPro.fgDim),
+                      style: AppText.secondary,
                     ),
                   ),
                 ],
@@ -138,16 +138,13 @@ class ResultsTable extends StatelessWidget {
                         Text(t.title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                color: OneDarkPro.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13.5)),
+                            style: AppText.title),
                         const SizedBox(height: 2),
                         Text(t.artistsLabel,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                color: OneDarkPro.fgDim, fontSize: 12)),
+                            style: AppText.secondary
+                                .copyWith(fontSize: 12)),
                       ],
                     ),
                   ),
@@ -156,14 +153,13 @@ class ResultsTable extends StatelessWidget {
                     child: Text(t.album,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            color: OneDarkPro.fg, fontSize: 12.5)),
+                        style:
+                            AppText.body.copyWith(fontSize: 12.5)),
                   ),
                   SizedBox(
                     width: 70,
                     child: Text(t.durationLabel,
-                        style: const TextStyle(
-                            color: OneDarkPro.fgDim, fontSize: 12.5)),
+                        style: AppText.secondary),
                   ),
                   SizedBox(
                     width: 140,
@@ -171,6 +167,7 @@ class ResultsTable extends StatelessWidget {
                       alignment: Alignment.centerRight,
                       child: queued
                           ? Container(
+                              width: 120,
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 10),
                               decoration: BoxDecoration(
@@ -181,21 +178,23 @@ class ResultsTable extends StatelessWidget {
                                     color: OneDarkPro.blue
                                         .withValues(alpha: 0.4)),
                               ),
-                              child: const Row(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(Icons.check_circle_rounded,
                                       color: OneDarkPro.blue, size: 16),
                                   SizedBox(width: 6),
                                   Text('En cola',
-                                      style: TextStyle(
+                                      style: AppText.body.copyWith(
                                           color: OneDarkPro.blue,
-                                          fontSize: 12,
                                           fontWeight: FontWeight.w600)),
                                 ],
                               ),
                             )
-                          : ElevatedButton.icon(
+                          : SizedBox(
+                              width: 120,
+                              child: ElevatedButton.icon(
                               onPressed: () => onDownload(t),
                               icon: const Icon(Icons.download_rounded,
                                   size: 16),
@@ -208,6 +207,7 @@ class ResultsTable extends StatelessWidget {
                                 tapTargetSize:
                                     MaterialTapTargetSize.shrinkWrap,
                               ),
+                            ),
                             ),
                     ),
                   ),
@@ -237,11 +237,6 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(text,
-        style: const TextStyle(
-            color: OneDarkPro.fgDim,
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.8));
+    return Text(text, style: AppText.caps);
   }
 }

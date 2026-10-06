@@ -10,6 +10,9 @@ class DownloadTask {
   String message;
   String? filePath;
 
+  /// Intentos de descarga consumidos (reintento progresivo).
+  int attempts;
+
   DownloadTask({
     required this.id,
     required this.track,
@@ -17,5 +20,6 @@ class DownloadTask {
     this.progress = 0,
     this.message = 'En cola',
     this.filePath,
+    this.attempts = 0,
   });
 }

@@ -31,7 +31,9 @@ Downloader de escritorio para Windows. Módulo actual: **Spotify**
    `format bestaudio/best`, `-x --audio-format mp3 --audio-quality 0`
    (VBR ~320kbps), `--no-warnings`, reintento con
    `player_client=android` ante 403. Sin `cookies.txt` (pendiente otro
-   enfoque anti-bot).
+   enfoque anti-bot). Reintento progresivo: 3 intentos con esperas de
+   5s/15s; quitar una descarga activa mata yt-dlp + ffmpeg y limpia
+   parciales (en fallo se conservan para reanudar).
 3. **Etiquetado** (`lib/services/audio_tagger.dart`): ID3v2.3 propio
    (TIT2/TPE1/TALB/APIC, UTF-16) equivale a `mutagen` (ellos usan
    `encoding=3`; aquí UTF-16 por compatibilidad con Explorer/WMP).
@@ -80,11 +82,35 @@ tool/
   ytm_check.dart   # verifica busqueda YTM en vivo
   ytm_shape.dart   # diagnostico de formas de respuesta YTM
   tag_check.dart   # verifica etiquetado ID3 en un MP3 real
+  emoji_check.dart # verifica safeFileName (ilegales y emojis)
+docs/
+  AUDITORIA_BETA.md    # auditoria pre-beta (producto)
+  AUDITORIA_CODIGO.md  # auditoria de arquitectura y optimizacion
 windows/runner/   # titulo nativo "Nova Hub Downloader"
 ```
 
+## Sistema visual
+
+Paleta One Dark Pro recortada a 13 colores
+(`lib/theme/one_dark_pro.dart`): 6 fondos/grises + blanco, primario
+azul `#5F7EA6`, y verde/amarillo/rojo solo para estados de descarga
+y errores. Sin colores por plataforma.
+
+Escala tipográfica única (`AppText`, misma familia base):
+
+| Nivel | Uso |
+|---|---|
+| `hero` 18/w800 | título principal de vista |
+| `title` 13.5/w600 | canciones, items, títulos de panel |
+| `body` 12 | texto funcional (botones, álbumes) |
+| `secondary` 12.5 | artistas, hints, mensajes |
+| `caps` 11/w700 + tracking | headers, badges, secciones |
+| `input` 14 | campo de búsqueda |
+
 ## Notas
 
+- La cola de descargas vive solo en memoria: al cerrar la app se pierde
+  (limitación conocida, sin persistencia en beta).
 - Ventana maximizada con tamaño mínimo requiere plugin + Developer
   Mode de Windows (pendiente).
 - Selector de carpeta destino pendiente (diseño en discusión).

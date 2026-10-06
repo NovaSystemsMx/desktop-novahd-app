@@ -86,7 +86,7 @@ class SpotifyService extends ChangeNotifier {
     });
     final res = await http.get(uri, headers: {'Authorization': 'Bearer $token'});
     if (res.statusCode != 200) {
-      throw Exception('Spotify respondió ${res.statusCode}: ${res.body}');
+      throw Exception('Spotify no disponible (codigo ${res.statusCode}).');
     }
     final data = jsonDecode(res.body) as Map<String, dynamic>;
     final items = (data['tracks']?['items'] as List?) ?? [];
@@ -118,9 +118,7 @@ class SpotifyService extends ChangeNotifier {
       body: {'grant_type': 'client_credentials'},
     );
     if (res.statusCode != 200) {
-      throw Exception(
-        'No se pudo obtener token de Spotify. Revisa Client ID/Secret.',
-      );
+      throw Exception('No se pudo conectar con Spotify.');
     }
     final data = jsonDecode(res.body) as Map<String, dynamic>;
     _token = data['access_token'] as String;
@@ -177,7 +175,7 @@ class SpotifyService extends ChangeNotifier {
           'La búsqueda tardó demasiado. Revisa tu conexión e inténtalo de nuevo.'),
     );
     if (res.exitCode != 0) {
-      throw Exception('yt-dlp falló en la búsqueda: ${res.stderr}');
+      throw Exception('La busqueda fallo. Revisa tu conexion.');
     }
     final tracks = <Track>[];
     for (final line in (res.stdout as String).split('\n')) {

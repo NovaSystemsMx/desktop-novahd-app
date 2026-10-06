@@ -39,7 +39,7 @@ class Sidebar extends StatelessWidget {
                       color: OneDarkPro.blue, size: 20),
                 ),
                 const SizedBox(width: 10),
-                const Column(
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('NOVA HUB',
@@ -48,21 +48,18 @@ class Sidebar extends StatelessWidget {
                             fontWeight: FontWeight.w800,
                             letterSpacing: 1.4)),
                     Text('Downloader',
-                        style: TextStyle(
-                            color: OneDarkPro.fgDim, fontSize: 11)),
+                        style: AppText.secondary
+                            .copyWith(fontSize: 11)),
                   ],
                 ),
               ],
             ),
           ),
-          const Padding(
+          Padding(
             padding: EdgeInsets.fromLTRB(18, 14, 18, 6),
             child: Text('PLATAFORMAS',
-                style: TextStyle(
-                    color: OneDarkPro.fgDim,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.1)),
+                style:
+                    AppText.caps.copyWith(letterSpacing: 1.1)),
           ),
           _item(
             context,
@@ -101,10 +98,9 @@ class Sidebar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text('Nova Hub v0.4 · Windows',
+                Text('Nova Hub v0.4',
                     textAlign: TextAlign.center,
-                    style:
-                        TextStyle(color: OneDarkPro.fgDim, fontSize: 11)),
+                    style: AppText.secondary.copyWith(fontSize: 11)),
               ],
             ),
           ),
@@ -142,13 +138,10 @@ class Sidebar extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(label,
-                        style: const TextStyle(
-                            color: OneDarkPro.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13.5)),
+                        style: AppText.title),
                     Text(subtitle,
-                        style: const TextStyle(
-                            color: OneDarkPro.fgDim, fontSize: 11)),
+                        style: AppText.secondary
+                            .copyWith(fontSize: 11)),
                   ],
                 ),
               ),
@@ -183,10 +176,8 @@ class Sidebar extends StatelessWidget {
                 child: Text(label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        color: OneDarkPro.fg,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13.5)),
+                    style: AppText.body.copyWith(
+                        fontSize: 13.5, fontWeight: FontWeight.w600)),
               ),
               Container(
                 padding:
@@ -196,8 +187,8 @@ class Sidebar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: OneDarkPro.border)),
                 child: Text(badge,
-                    style: const TextStyle(
-                        color: OneDarkPro.fgDim, fontSize: 10)),
+                    style:
+                        AppText.caps.copyWith(fontSize: 10)),
               ),
             ],
           ),

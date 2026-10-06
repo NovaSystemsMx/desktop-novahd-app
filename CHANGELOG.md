@@ -1,5 +1,14 @@
 # CHANGELOG — Nova Hub Downloader
 
+## No publicado
+
+- Cancelar una descarga activa mata yt-dlp + ffmpeg y limpia parciales.
+- Reintento progresivo: 3 intentos con backoff 5s/15s y mensajes humanos.
+- Errores de búsqueda/descarga humanizados (sin códigos ni stderr).
+- `safeFileName` elimina emojis conservando tildes y CJK (verificado).
+- Escala tipográfica `AppText` (6 niveles) aplicada a toda la UI.
+- Campo de búsqueda con nivel `input` 14 + limpieza de warnings.
+
 ## v0.4 — Sistema de color + headers sincronizados
 
 - Azul `#5F7EA6` como color primario (botones con texto oscuro,

@@ -22,7 +22,6 @@ class _SpotifyViewState extends State<SpotifyView> {
   List<Track> _results = [];
   bool _searching = false;
   String? _error;
-  bool _hasSearched = false;
 
   @override
   void dispose() {
@@ -44,14 +43,12 @@ class _SpotifyViewState extends State<SpotifyView> {
       if (!mounted) return;
       setState(() {
         _results = tracks;
-        _hasSearched = true;
         _searching = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _error = e.toString().replaceFirst('Exception: ', '');
-        _hasSearched = true;
         _searching = false;
       });
     }
@@ -80,18 +77,15 @@ class _SpotifyViewState extends State<SpotifyView> {
                     color: OneDarkPro.blue),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Spotify Downloader',
-                        style: TextStyle(
-                            color: OneDarkPro.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800)),
+                        style: AppText.hero),
                     Text('MP3 con caratula y etiquetas ID3',
-                        style: TextStyle(
-                            color: OneDarkPro.fgDim, fontSize: 12)),
+                        style: AppText.secondary
+                            .copyWith(fontSize: 12)),
                   ],
                 ),
               ),
@@ -106,9 +100,11 @@ class _SpotifyViewState extends State<SpotifyView> {
                   controller: _controller,
                   onSubmitted: (_) => _search(),
                   textInputAction: TextInputAction.search,
-                  decoration: const InputDecoration(
+                  style: AppText.input,
+                  decoration: InputDecoration(
                     hintText: 'Busca canción, artista o álbum…',
-                    prefixIcon: Icon(Icons.search_rounded),
+                    hintStyle: AppText.secondary.copyWith(fontSize: 14),
+                    prefixIcon: const Icon(Icons.search_rounded),
                   ),
                 ),
               ),
@@ -152,8 +148,9 @@ class _SpotifyViewState extends State<SpotifyView> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(_error!,
-                        style: const TextStyle(
-                            color: OneDarkPro.red, fontSize: 12.5)),
+                        style: AppText.body.copyWith(
+                            color: OneDarkPro.red,
+                            fontSize: 12.5)),
                   ),
                 ],
               ),

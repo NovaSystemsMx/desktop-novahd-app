@@ -45,28 +45,17 @@ class DownloadQueuePanel extends StatelessWidget {
                             children: [
                               const Text(
                                 'COLA DE DESCARGAS',
-                                style: TextStyle(
-                                    color: OneDarkPro.fgDim,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.8),
+                                style: AppText.caps,
                               ),
                               const SizedBox(width: 10),
                               const Text(
                                 '•',
-                                style: TextStyle(
-                                    color: OneDarkPro.fgDim,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700),
+                                style: AppText.caps,
                               ),
                               const SizedBox(width: 10),
                               Text(
                                 q.length.toString(),
-                                style: const TextStyle(
-                                    color: OneDarkPro.fgDim,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.8),
+                                style: AppText.caps,
                               ),
                             ],
                           ),
@@ -115,9 +104,7 @@ class DownloadQueuePanel extends StatelessWidget {
                             Text(
                               'La cola esta vacia.\nDescarga cualquier resultado y aparecera aqui con su progreso.',
                               textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  color: OneDarkPro.fgDim,
-                                  fontSize: 12.5),
+                              style: AppText.secondary,
                             ),
                           ],
                         ),
@@ -148,8 +135,8 @@ class DownloadQueuePanel extends StatelessWidget {
                       dl.downloadDir.path,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          color: OneDarkPro.fgDim, fontSize: 11),
+                      style:
+                          AppText.secondary.copyWith(fontSize: 11),
                     ),
                   ),
                 ),
@@ -208,10 +195,8 @@ class _QueueTile extends StatelessWidget {
                 Text('${task.track.artistsLabel} - ${task.track.title}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        color: OneDarkPro.white,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600)),
+                    style:
+                        AppText.title.copyWith(fontSize: 12.5)),
                 const SizedBox(height: 4),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(6),
@@ -229,8 +214,8 @@ class _QueueTile extends StatelessWidget {
                 Text(task.message,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        color: OneDarkPro.fgDim, fontSize: 11.5)),
+                    style: AppText.secondary
+                        .copyWith(fontSize: 11.5)),
               ],
             ),
           ),

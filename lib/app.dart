@@ -39,14 +39,14 @@ class _NovadhAppShellState extends State<NovadhAppShell> {
                   ),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16),
-                  child: const Row(
+                  child: Row(
                     children: [
                       Icon(Icons.download_rounded,
                           size: 14, color: OneDarkPro.blue),
                       SizedBox(width: 8),
-                      Text('Nova Hub Downloader — Windows · v0.4',
-                          style: TextStyle(
-                              color: OneDarkPro.fgDim, fontSize: 12)),
+                      Text('Nova Hub Downloader - Windows v0.4',
+                          style: AppText.secondary
+                              .copyWith(fontSize: 12)),
                     ],
                   ),
                 ),
