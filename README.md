@@ -1,4 +1,4 @@
-# Nova Hub Downloader — v0.4 (Windows + Flutter)
+# Nova Hub Downloader — v0.5 (Windows + Flutter)
 
 Downloader de escritorio para Windows. Módulo actual: **Spotify**
 (búsqueda y metadatos vía YouTube Music, réplica del pipeline Python

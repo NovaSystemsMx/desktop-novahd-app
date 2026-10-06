@@ -1,6 +1,6 @@
 # CHANGELOG — Nova Hub Downloader
 
-## No publicado
+## v0.5 — Robustez de descarga + escala tipográfica
 
 - Cancelar una descarga activa mata yt-dlp + ffmpeg y limpia parciales.
 - Reintento progresivo: 3 intentos con backoff 5s/15s y mensajes humanos.

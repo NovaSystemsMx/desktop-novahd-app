@@ -98,7 +98,7 @@ class Sidebar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text('Nova Hub v0.4',
+                Text('Nova Hub v0.5',
                     textAlign: TextAlign.center,
                     style: AppText.secondary.copyWith(fontSize: 11)),
               ],
