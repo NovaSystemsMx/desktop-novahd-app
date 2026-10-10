@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import '../config/app_config.dart';
 import 'package:http/http.dart' as http;
 
 /// Etiquetado ID3v2.3 de MP3 (equivale a `mutagen` en el pipeline Python).
@@ -26,7 +27,7 @@ class AudioTagger {
       try {
         final res = await http
             .get(Uri.parse(url))
-            .timeout(const Duration(seconds: 20));
+            .timeout(AppConfig.metadataTimeout);
         if (res.statusCode == 200 && res.bodyBytes.length > 512) {
           return res.bodyBytes;
         }

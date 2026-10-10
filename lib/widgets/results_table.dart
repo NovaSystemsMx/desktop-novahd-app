@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../models/track.dart';
@@ -122,11 +123,14 @@ class ResultsTable extends StatelessWidget {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: t.imageSmall.isNotEmpty
-                        ? Image.network(t.imageSmall,
+                        ? CachedNetworkImage(
+                            imageUrl: t.imageSmall,
                             width: 44,
                             height: 44,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => _coverFallback())
+                            placeholder: (_, _) => _coverFallback(),
+                            errorWidget: (_, _, _) => _coverFallback(),
+                          )
                         : _coverFallback(),
                   ),
                   const SizedBox(width: 12),

@@ -1,41 +1,49 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import '../config/app_config.dart';
 import '../models/download_task.dart';
 import '../models/track.dart';
 import 'audio_tagger.dart';
 import 'binaries.dart';
+import 'yt_dlp_engine.dart';
 import 'ytmusic_service.dart';
 
 /// Gestiona la cola de descargas con el pipeline híbrido:
 ///
-/// 1. Metadatos: YouTube Music API (vía [YouTubeMusicService]) u opcional
-///    Spotify API si hay credenciales.
-/// 2. Audio: yt-dlp extrae el mejor audio y lo convierte a MP3 en máxima
-///    calidad (`--audio-quality 0`, VBR ~320kbps) con ffmpeg.
+/// 1. Metadatos: YouTube Music API (vía [YouTubeMusicService]).
+/// 2. Audio: [YtDlpEngine] extrae el mejor audio y lo convierte a MP3 en
+///    máxima calidad (`--audio-quality 0`, VBR ~320kbps) con ffmpeg.
 /// 3. Etiquetado: [AudioTagger] incrusta título, artista, álbum y la mejor
-///    carátula disponible sin Spotify API (player HD → thumb YTM →
-///    maxres de YouTube) como etiquetas ID3v2.3 (equivale a `mutagen`).
+///    carátula disponible (player HD → thumb YTM → maxres de YouTube)
+///    como etiquetas ID3v2.3 (equivale a `mutagen`).
 /// 4. Destino: carpeta Descargas de Windows (%USERPROFILE%/Downloads).
 class DownloaderService extends ChangeNotifier {
-  /// Calidad MP3 máxima con libmp3lame (VBR ~320kbps).
-  static const audioQuality = '0';
+  /// Calidad MP3: ver [AppConfig.audioQuality].
+
+  /// Motor de procesos reutilizable (audio, JSON, futuros módulos).
+  final YtDlpEngine engine = YtDlpEngine();
+
   final List<DownloadTask> _queue = [];
   bool _working = false;
-  bool _ytDlpChecked = false;
-  bool _ytDlpAvailable = false;
 
   List<DownloadTask> get queue => List.unmodifiable(_queue);
 
-  String? _ytDlpPath;
+  /// Huella de la cola (ids + estados) para rebuilds granulares:
+  /// solo cambia al encolar, quitar o cambiar de estado (no con el %).
+  String get queueFingerprint =>
+      _queue.map((t) => '${t.track.id}:${t.status.index}').join('|');
 
-  /// Proceso de descarga en curso (para cancelarlo al quitar la tarea).
-  Process? _activeProcess;
-  String? _activeTaskId;
+  /// Ids en cola o descargando (para marcar filas ya agregadas).
+  Set<String> get queuedIds => _queue
+      .where((t) =>
+          t.status == DownloadStatus.queued ||
+          t.status == DownloadStatus.downloading)
+      .map((t) => t.track.id)
+      .toSet();
 
   String? _notice;
 
@@ -45,7 +53,7 @@ class DownloaderService extends ChangeNotifier {
   void _setNotice(String message) {
     _notice = message;
     notifyListeners();
-    Timer(const Duration(seconds: 4), () {
+    Timer(AppConfig.noticeDuration, () {
       _notice = null;
       notifyListeners();
     });
@@ -97,12 +105,11 @@ class DownloaderService extends ChangeNotifier {
   }
 
   void remove(String taskId) {
-    final task = _queue.where((t) => t.id == taskId).toList();
-    final wasActive = task.any((t) =>
-        t.status == DownloadStatus.downloading && t.id == _activeTaskId);
+    final wasActive = _queue.any((t) =>
+        t.id == taskId && t.status == DownloadStatus.downloading);
     _queue.removeWhere((t) => t.id == taskId);
     if (wasActive) {
-      _killActive();
+      engine.killActive();
       _setNotice('Descarga cancelada.');
     }
     notifyListeners();
@@ -152,43 +159,7 @@ class DownloaderService extends ChangeNotifier {
     }
   }
 
-  Future<bool> _hasYtDlp() async {
-    if (_ytDlpChecked) return _ytDlpAvailable;
-    _ytDlpChecked = true;
-    try {
-      _ytDlpPath = await Binaries.ytDlp();
-      if (_ytDlpPath == null) {
-        _ytDlpAvailable = false;
-        return false;
-      }
-      final r = await Process.run(_ytDlpPath!, ['--version']).timeout(
-        const Duration(seconds: 8),
-      );
-      _ytDlpAvailable = r.exitCode == 0;
-    } catch (_) {
-      _ytDlpAvailable = false;
-    }
-    return _ytDlpAvailable;
-  }
-
-  /// Mata el proceso de descarga en curso y su árbol (ffmpeg hijo).
-  void _killActive() {
-    final proc = _activeProcess;
-    _activeProcess = null;
-    _activeTaskId = null;
-    if (proc == null) return;
-    try {
-      proc.kill();
-    } catch (_) {}
-    if (Platform.isWindows) {
-      try {
-        Process.run(
-            'taskkill', ['/PID', '${proc.pid}', '/T', '/F']).timeout(
-          const Duration(seconds: 5),
-        );
-      } catch (_) {}
-    }
-  }
+  Future<bool> _hasYtDlp() => engine.ensureAvailable();
 
   Future<void> _download(DownloadTask task) async {
     task.status = DownloadStatus.downloading;
@@ -201,9 +172,8 @@ class DownloaderService extends ChangeNotifier {
       _missingEngine(task);
       return;
     }
-    // Reintento progresivo: 3 intentos con esperas de 5s y 15s.
-    const maxAttempts = 3;
-    const backoffs = [Duration(seconds: 5), Duration(seconds: 15)];
+    // Reintento progresivo ([AppConfig.maxAttempts] intentos con backoff).
+    const backoffs = [AppConfig.backoffFirst, AppConfig.backoffSecond];
     while (true) {
       // Si el usuario quitó la tarea (canceló), no seguir.
       if (!_queue.any((t) => t.id == task.id)) return;
@@ -213,18 +183,18 @@ class DownloaderService extends ChangeNotifier {
         return;
       } catch (_) {
         if (!_queue.any((t) => t.id == task.id)) return;
-        if (task.attempts >= maxAttempts) {
+        if (task.attempts >= AppConfig.maxAttempts) {
           task.status = DownloadStatus.failed;
           task.progress = 0;
           task.message =
-              'No se pudo descargar tras 3 intentos. Revisa tu conexión.';
+              'No se pudo descargar tras ${AppConfig.maxAttempts} intentos. Revisa tu conexión.';
           notifyListeners();
           return;
         }
         final wait = backoffs[(task.attempts - 1)
             .clamp(0, backoffs.length - 1)];
         task.message =
-            'Reintentando en ${wait.inSeconds}s (intento ${task.attempts + 1}/$maxAttempts)...';
+            'Reintentando en ${wait.inSeconds}s (intento ${task.attempts + 1}/${AppConfig.maxAttempts})...';
         notifyListeners();
         await Future.delayed(wait);
       }
@@ -251,41 +221,37 @@ class DownloaderService extends ChangeNotifier {
     final source = task.track.youtubeUrl.isNotEmpty
         ? task.track.youtubeUrl
         : 'ytsearch1:${task.track.youtubeQuery}';
-    final args = [
-      source,
-      '-x',
-      '--audio-format',
-      'mp3',
-      '--audio-quality',
-      audioQuality,
-      '--format',
-      'bestaudio/best',
-      '--no-warnings',
-      '--no-playlist',
-      '--output',
-      outTemplate,
-      '--newline',
-      '--progress',
-    ];
 
     task.message = 'Descargando audio...';
     notifyListeners();
 
-    // Foto de los mp3 existentes para identificar el recién generado.
-    final before = await _listMp3Paths(dir);
-    // Foto de TODOS los archivos para limpiar parciales si se cancela.
-    final beforeAll = await _listAllPaths(dir);
+    // Fotos para identificar el recién generado y limpiar si se cancela.
+    final before = await YtDlpEngine.snapshotMp3Paths(dir);
+    final beforeAll = await YtDlpEngine.snapshotAllPaths(dir);
 
-    var exit = await _runYtDlp(args, task);
+    Future<int> attempt(List<String> extraArgs) =>
+        engine.downloadAudio(
+          source: source,
+          outputTemplate: outTemplate,
+          audioQuality: AppConfig.audioQuality,
+          extraArgs: extraArgs,
+          onProgress: (p) {
+            task.progress = p;
+            task.message =
+                'Descargando... ${(p * 100).toStringAsFixed(0)}%';
+            notifyListeners();
+          },
+        );
+
+    var exit = await attempt(const []);
     if (exit != 0) {
       // YouTube a veces responde 403 al cliente web: reintento con el
       // cliente android antes de dar la descarga por fallida.
       task.message = 'Reintentando con cliente alternativo…';
       task.progress = 0;
       notifyListeners();
-      exit = await _runYtDlp(
-          [...args, '--extractor-args', 'youtube:player_client=android'],
-          task);
+      exit = await attempt(
+          ['--extractor-args', 'youtube:player_client=android']);
     }
     if (exit != 0) {
       throw Exception('yt-dlp salió con código $exit');
@@ -294,12 +260,12 @@ class DownloaderService extends ChangeNotifier {
     // Si se canceló mientras descargaba/convertía, no tocar nada más:
     // limpia parciales (.part, .webm/mp3 truncados, temporales) y sale.
     if (!_queue.any((t) => t.id == task.id)) {
-      await _cleanupNewFiles(dir, beforeAll);
+      await YtDlpEngine.deleteNewFiles(dir, beforeAll);
       return;
     }
 
     // Localiza el mp3 recién generado (ignora los que ya existían).
-    final mp3 = await _findNewMp3(dir, before);
+    final mp3 = await YtDlpEngine.findNewMp3(dir, before);
     if (mp3 == null) throw Exception('No se encontró el MP3 generado');
 
     // 2) Renombra al formato "Artista - Título.mp3".
@@ -317,100 +283,6 @@ class DownloaderService extends ChangeNotifier {
     task.status = DownloadStatus.completed;
     task.message = 'Completado';
     notifyListeners();
-  }
-
-  /// Ejecuta yt-dlp con [args] reportando el progreso en [task].
-  /// Devuelve el código de salida.
-  Future<int> _runYtDlp(List<String> args, DownloadTask task) async {
-    final proc = await Process.start(_ytDlpPath ?? 'yt-dlp', args);
-    _activeProcess = proc;
-    _activeTaskId = task.id;
-
-    // La salida de yt-dlp en consola Windows puede traer bytes no UTF-8
-    // (tildes en títulos): se decodifica de forma tolerante.
-    const outputDecoder = Utf8Decoder(allowMalformed: true);
-    proc.stdout.transform(outputDecoder).listen((chunk) {
-      // yt-dlp imprime "[download]  45.2% ..." — extraemos el porcentaje.
-      final m = RegExp(r'(\d{1,3}(?:\.\d+)?)%').firstMatch(chunk);
-      if (m != null) {
-        final pct = double.tryParse(m.group(1)!);
-        if (pct != null) {
-          task.progress = (pct / 100).clamp(0, 1);
-          task.message =
-              'Descargando... ${pct.toStringAsFixed(0)}%';
-          notifyListeners();
-        }
-      }
-    });
-    proc.stderr.transform(outputDecoder).listen((_) {});
-
-    try {
-      return await proc.exitCode;
-    } finally {
-      if (_activeTaskId == task.id) {
-        _activeProcess = null;
-        _activeTaskId = null;
-      }
-    }
-  }
-
-  /// Borra los archivos que yt-dlp/ffmpeg dejaron a medias tras cancelar.
-  /// Solo se usa al cancelar (en fallo se conservan para reanudar).
-  Future<void> _cleanupNewFiles(
-      Directory dir, Set<String> beforeAll) async {
-    try {
-      await for (final e in dir.list()) {
-        if (e is File && !beforeAll.contains(e.path)) {
-          try {
-            await e.delete();
-          } catch (_) {}
-        }
-      }
-    } catch (_) {}
-  }
-
-  Future<Set<String>> _listAllPaths(Directory dir) async {
-    final paths = <String>{};
-    try {
-      await for (final e in dir.list()) {
-        if (e is File) paths.add(e.path);
-      }
-    } catch (_) {}
-    return paths;
-  }
-
-  Future<Set<String>> _listMp3Paths(Directory dir) async {
-    final paths = <String>{};
-    await for (final e in dir.list()) {
-      if (e is File && e.path.toLowerCase().endsWith('.mp3')) {
-        paths.add(e.path);
-      }
-    }
-    return paths;
-  }
-
-  /// Devuelve el MP3 nuevo (no estaba en [before]); si no hay ninguno nuevo,
-  /// cae al más reciente como respaldo.
-  Future<File?> _findNewMp3(Directory dir, Set<String> before) async {
-    File? newestNew;
-    DateTime newestNewTime = DateTime.fromMillisecondsSinceEpoch(0);
-    File? newestAny;
-    DateTime newestAnyTime = DateTime.fromMillisecondsSinceEpoch(0);
-    await for (final e in dir.list()) {
-      if (e is File && e.path.toLowerCase().endsWith('.mp3')) {
-        final stat = await e.stat();
-        if (stat.modified.isAfter(newestAnyTime)) {
-          newestAnyTime = stat.modified;
-          newestAny = e;
-        }
-        if (!before.contains(e.path) &&
-            stat.modified.isAfter(newestNewTime)) {
-          newestNewTime = stat.modified;
-          newestNew = e;
-        }
-      }
-    }
-    return newestNew ?? newestAny;
   }
 
   Future<File> _safeRename(File src, String destPath) async {
@@ -521,7 +393,7 @@ class DownloaderService extends ChangeNotifier {
       final ffmpeg = await Binaries.ffmpeg();
       if (ffmpeg == null) return; // deja la miniatura de yt-dlp
       final r = await Process.run(ffmpeg, ['-version']).timeout(
-        const Duration(seconds: 6),
+        AppConfig.ffmpegCheckTimeout,
       );
       if (r.exitCode != 0) return;
       final tmp = '$mp3Path.tmp.mp3';

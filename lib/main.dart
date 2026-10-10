@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'app.dart';
 import 'services/downloader_service.dart';
-import 'services/spotify_service.dart';
+import 'services/music_search_service.dart';
 import 'theme/one_dark_pro.dart';
 
 Future<void> main() async {
@@ -12,7 +12,7 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => SpotifyService()),
+        ChangeNotifierProvider(create: (_) => MusicSearchService()),
         ChangeNotifierProvider(create: (_) => DownloaderService()),
       ],
       child: const NovadhApp(),

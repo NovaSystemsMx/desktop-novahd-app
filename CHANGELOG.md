@@ -1,4 +1,11 @@
-# CHANGELOG — Nova Hub Downloader
+## v0.6 (en curso) — Arquitectura limpia
+
+- `YtDlpEngine` extraído: motor yt-dlp reutilizable sin UI.
+- `MusicSearchService` (antes `SpotifyService`): fuera Spotify API.
+- `AppConfig` central: tiempos, topes, backoffs y calidades.
+- Rebuild granular: la tabla solo se reconstruye si cambia la cola.
+- Miniaturas con `cached_network_image` (requiere Developer Mode).
+- `safeFileName` elimina emojis; herramienta `tool/engine_check.dart`.
 
 ## v0.5 — Robustez de descarga + escala tipográfica
 

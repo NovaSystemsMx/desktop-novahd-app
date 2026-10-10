@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/track.dart';
 import '../services/downloader_service.dart';
-import '../services/spotify_service.dart';
+import '../services/music_search_service.dart';
 import '../theme/one_dark_pro.dart';
 import '../widgets/download_queue_panel.dart';
 import '../widgets/results_table.dart';
@@ -39,7 +39,7 @@ class _SpotifyViewState extends State<SpotifyView> {
       _error = null;
     });
     try {
-      final tracks = await context.read<SpotifyService>().search(q);
+      final tracks = await context.read<MusicSearchService>().search(q);
       if (!mounted) return;
       setState(() {
         _results = tracks;
@@ -56,9 +56,6 @@ class _SpotifyViewState extends State<SpotifyView> {
 
   @override
   Widget build(BuildContext context) {
-    final downloader = context.watch<DownloaderService>();
-    final queuedIds = downloader.queue.map((t) => t.track.id).toSet();
-
     return Padding(
       padding: const EdgeInsets.all(22),
       child: Column(
@@ -162,12 +159,19 @@ class _SpotifyViewState extends State<SpotifyView> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
-                  child: ResultsTable(
-                    tracks: _results,
-                    queuedIds: queuedIds,
-                    onDownload: (track) {
-                      context.read<DownloaderService>().enqueue(track);
-                    },
+                  // Solo se reconstruye si cambia la membresía de la cola
+                  // (huella de ids+estados), no con cada tick de progreso.
+                  child: Selector<DownloaderService, String>(
+                    selector: (_, dl) => dl.queueFingerprint,
+                    builder: (context, _, _) => ResultsTable(
+                      tracks: _results,
+                      queuedIds: context
+                          .read<DownloaderService>()
+                          .queuedIds,
+                      onDownload: (track) {
+                        context.read<DownloaderService>().enqueue(track);
+                      },
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
