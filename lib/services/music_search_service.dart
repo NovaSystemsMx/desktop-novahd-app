@@ -2,41 +2,24 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 
+import '../config/app_config.dart';
 import '../models/track.dart';
 import 'binaries.dart';
 import 'ytmusic_service.dart';
 
-/// Servicio de búsqueda.
+/// Servicio de búsqueda de música (sin Spotify API).
 ///
-/// - Con credenciales de Spotify: API oficial (carátulas 640px).
-/// - Sin credenciales: búsqueda directa con yt-dlp (`ytsearch`),
-///   100% funcional sin keys. La carátula es el thumbnail HD de YouTube
-///   (`maxresdefault`, hasta 1280px) y se incrusta en el MP3.
-class SpotifyService extends ChangeNotifier {
-  String _clientId = '';
-  String _clientSecret = '';
-  String? _token;
-  DateTime? _tokenExpiry;
-
+/// Fuente principal: YouTube Music, réplica de
+/// `YTMusic().search(filter="songs", limit=15)`. Reserva: búsqueda
+/// plana con yt-dlp. También expone el estado para la barra global.
+class MusicSearchService extends ChangeNotifier {
   /// Estado de búsqueda para la barra de estado global.
   bool isSearching = false;
   bool hasSearched = false;
   String lastQuery = '';
   int lastResultCount = 0;
   String? lastSearchError;
-
-  String get clientId => _clientId;
-  bool get hasCredentials => _clientId.isNotEmpty && _clientSecret.isNotEmpty;
-
-  void setCredentials(String id, String secret) {
-    _clientId = id.trim();
-    _clientSecret = secret.trim();
-    _token = null;
-    _tokenExpiry = null;
-    notifyListeners();
-  }
 
   /// Búsqueda completa en una sola fase: filas con álbum, duración y
   /// carátula HD antes de pintar (como el pipeline Python: la tabla se
@@ -64,36 +47,17 @@ class SpotifyService extends ChangeNotifier {
   }
 
   Future<List<Track>> _searchInner(String q) async {
-    if (!hasCredentials) {
-      // Réplica de YTMusic().search(filter="songs", limit=15):
-      // filas nativas con álbum y duración (sin enriquecimiento extra).
-      // Solo si falla, reserva con ytsearch (con enriquecimiento).
-      try {
-        final songs = await YouTubeMusicService().searchSongs(q);
-        if (songs.isNotEmpty) return songs;
-      } catch (_) {
-        // Cae al fallback de yt-dlp.
-      }
-      final flat = await youtubeSearch(q);
-      return YouTubeMusicService().enrichTracks(flat);
+    // Réplica de YTMusic().search(filter="songs", limit=15):
+    // filas nativas con álbum y duración (sin enriquecimiento extra).
+    // Solo si falla, reserva con ytsearch (con enriquecimiento).
+    try {
+      final songs = await YouTubeMusicService().searchSongs(q);
+      if (songs.isNotEmpty) return songs;
+    } catch (_) {
+      // Cae al fallback de yt-dlp.
     }
-    final token = await _accessToken();
-    final uri = Uri.https('api.spotify.com', '/v1/search', {
-      'q': q,
-      'type': 'track',
-      'limit': '20',
-      'market': 'ES',
-    });
-    final res = await http.get(uri, headers: {'Authorization': 'Bearer $token'});
-    if (res.statusCode != 200) {
-      throw Exception('Spotify no disponible (codigo ${res.statusCode}).');
-    }
-    final data = jsonDecode(res.body) as Map<String, dynamic>;
-    final items = (data['tracks']?['items'] as List?) ?? [];
-    return items
-        .whereType<Map<String, dynamic>>()
-        .map(_fromJson)
-        .toList();
+    final flat = await youtubeSearch(q);
+    return YouTubeMusicService().enrichTracks(flat);
   }
 
   /// Completa álbum, duración y carátula HD de [tracks] en paralelo.
@@ -101,58 +65,6 @@ class SpotifyService extends ChangeNotifier {
   /// después sin bloquear la lista.
   Future<List<Track>> enrichTracks(List<Track> tracks) =>
       YouTubeMusicService().enrichTracks(tracks);
-
-  Future<String> _accessToken() async {
-    if (_token != null &&
-        _tokenExpiry != null &&
-        DateTime.now().isBefore(_tokenExpiry!)) {
-      return _token!;
-    }
-    final basic = base64Encode(utf8.encode('$_clientId:$_clientSecret'));
-    final res = await http.post(
-      Uri.https('accounts.spotify.com', '/api/token'),
-      headers: {
-        'Authorization': 'Basic $basic',
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: {'grant_type': 'client_credentials'},
-    );
-    if (res.statusCode != 200) {
-      throw Exception('No se pudo conectar con Spotify.');
-    }
-    final data = jsonDecode(res.body) as Map<String, dynamic>;
-    _token = data['access_token'] as String;
-    final expiresIn = (data['expires_in'] as num?)?.toInt() ?? 3600;
-    _tokenExpiry =
-        DateTime.now().add(Duration(seconds: expiresIn - 60));
-    return _token!;
-  }
-
-  Track _fromJson(Map<String, dynamic> j) {
-    final images = (j['album']?['images'] as List?) ?? [];
-    // Spotify devuelve imágenes de mayor a menor; la última suele ser 64px,
-    // la primera 640px (máxima calidad de carátula vía API).
-    String pick(int index, String fallback) {
-      if (images.isEmpty) return fallback;
-      if (index < images.length) {
-        return (images[index]['url'] ?? fallback) as String;
-      }
-      return (images.first['url'] ?? fallback) as String;
-    }
-    final artists = ((j['artists'] as List?) ?? [])
-        .map((a) => (a['name'] ?? 'Desconocido').toString())
-        .toList();
-    return Track(
-      id: (j['id'] ?? DateTime.now().microsecondsSinceEpoch.toString()).toString(),
-      title: (j['name'] ?? 'Sin título').toString(),
-      artists: artists.isEmpty ? ['Desconocido'] : artists,
-      album: (j['album']?['name'] ?? 'Single').toString(),
-      durationMs: (j['duration_ms'] as num?)?.toInt() ?? 0,
-      imageSmall: pick(images.length - 1, ''),
-      imageLarge: pick(0, ''),
-      spotifyUrl: ((j['external_urls']?['spotify']) ?? '').toString(),
-    );
-  }
 
   /// Búsqueda real con yt-dlp, sin necesidad de API keys.
   /// Usa `--flat-playlist` (rápido, sin extraer cada video) y construye
@@ -170,7 +82,7 @@ class SpotifyService extends ChangeNotifier {
       '--no-playlist',
       'ytsearch15:$query',
     ]).timeout(
-      const Duration(seconds: 40),
+      AppConfig.flatSearchTimeout,
       onTimeout: () => throw Exception(
           'La búsqueda tardó demasiado. Revisa tu conexión e inténtalo de nuevo.'),
     );

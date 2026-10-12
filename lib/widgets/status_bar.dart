@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../services/downloader_service.dart';
-import '../services/spotify_service.dart';
+import '../services/music_search_service.dart';
 import '../theme/one_dark_pro.dart';
 
 /// Barra de estado inferior persistente (patron desktop clasico).
@@ -12,7 +12,7 @@ class StatusBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<DownloaderService, SpotifyService>(
+    return Consumer2<DownloaderService, MusicSearchService>(
       builder: (context, dl, sp, _) {
         final downloading = dl.downloadingCount;
         final queued = dl.queuedCount;

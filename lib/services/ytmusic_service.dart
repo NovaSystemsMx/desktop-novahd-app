@@ -1,10 +1,10 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+import '../config/app_config.dart';
 import '../models/track.dart';
-import 'binaries.dart';
+import 'yt_dlp_engine.dart';
 
 /// Metadatos vía API interna de YouTube Music (equivale a `ytmusicapi`).
 ///
@@ -18,8 +18,7 @@ class YouTubeMusicService {
   /// (`get_search_params`: "EgWKAQ" + "II" + "AWoMEA4QChADEAQQCRAF").
   static const _songsParams = 'EgWKAQIIAWoMEA4QChADEAQQCRAF';
 
-  /// Tope de resultados (equivale a limit=15).
-  static const searchLimit = 15;
+  /// Tope de resultados (equivale a limit=15): ver [AppConfig].
 
   /// Versión de cliente dinámica como la librería: 1.YYYYMMDD.01.00.
   String get _clientVersion {
@@ -62,7 +61,7 @@ class YouTubeMusicService {
     final res = await http
         .post(_searchUri(), headers: _headers, body: jsonEncode(body))
         .timeout(
-          const Duration(seconds: 25),
+          AppConfig.searchTimeout,
           onTimeout: () =>
               throw Exception('YouTube Music no respondió a tiempo.'),
         );
@@ -74,7 +73,7 @@ class YouTubeMusicService {
     // Continuations del estante hasta el tope (como get_continuations).
     // Un fallo de continuación no invalida lo ya obtenido.
     var shelf = _findMusicShelf(data);
-    while (tracks.length < searchLimit) {
+    while (tracks.length < AppConfig.searchLimit) {
       final token = _dig(shelf, [
         'continuations',
         0,
@@ -92,7 +91,7 @@ class YouTubeMusicService {
       if (items is! List || items.isEmpty) break;
       var added = 0;
       for (final item in items) {
-        if (tracks.length >= searchLimit) break;
+        if (tracks.length >= AppConfig.searchLimit) break;
         final t = _parseItem(item);
         if (t != null && !tracks.any((e) => e.youtubeUrl == t.youtubeUrl)) {
           tracks.add(t);
@@ -103,7 +102,7 @@ class YouTubeMusicService {
       shelf = cont;
     }
     // Tope 15 como limit=15 de la librería.
-    final capped = tracks.take(searchLimit).toList();
+    final capped = tracks.take(AppConfig.searchLimit).toList();
     await _fillMissingDurations(capped);
     return capped;
   }
@@ -129,7 +128,7 @@ class YouTubeMusicService {
 
     try {
       await Future.wait(missing.map(fillOne))
-          .timeout(const Duration(seconds: 12));
+          .timeout(AppConfig.durationFillTimeout);
     } catch (_) {}
   }
 
@@ -142,7 +141,7 @@ class YouTubeMusicService {
           headers: _headers,
           body: jsonEncode(body),
         )
-        .timeout(const Duration(seconds: 20));
+        .timeout(AppConfig.searchTimeout);
     if (res.statusCode != 200) throw Exception('continuation ${res.statusCode}');
     final data = jsonDecode(res.body);
     dynamic shelf;
@@ -208,7 +207,7 @@ class YouTubeMusicService {
             'videoId': videoId,
           }),
         )
-        .timeout(const Duration(seconds: 20));
+        .timeout(AppConfig.playerTimeout);
     if (res.statusCode != 200) throw Exception('player ${res.statusCode}');
     final vd = (jsonDecode(res.body) as Map)['videoDetails'];
     if (vd is! Map) throw Exception('sin videoDetails');
@@ -281,32 +280,16 @@ class YouTubeMusicService {
 
     try {
       return await Future.wait(tracks.map(enrichOne))
-          .timeout(const Duration(seconds: 30));
+          .timeout(AppConfig.enrichTimeout);
     } catch (_) {
       return tracks;
     }
   }
 
-  /// Metadatos completos de un video vía yt-dlp (álbum, thumbs, …).
-  Future<Map<String, dynamic>> _dumpJson(String url) async {
-    final ytDlp = await Binaries.ytDlp();
-    if (ytDlp == null) throw Exception('yt-dlp no localizado');
-    final res = await Process.run(ytDlp, [
-      '--dump-json',
-      '--skip-download',
-      '--no-playlist',
-      '--no-check-formats',
-      url,
-    ]).timeout(const Duration(seconds: 20));
-    if (res.exitCode != 0) throw Exception('dump-json falló');
-    final lines = (res.stdout as String)
-        .split('\n')
-        .map((l) => l.trim())
-        .where((l) => l.startsWith('{'))
-        .toList();
-    if (lines.isEmpty) throw Exception('dump-json vacío');
-    return jsonDecode(lines.first) as Map<String, dynamic>;
-  }
+  /// Metadatos completos de un video vía el motor compartido.
+  /// Usa su propia instancia (sin estado de cancelación de descargas).
+  Future<Map<String, dynamic>> _dumpJson(String url) =>
+      YtDlpEngine().fetchJson(url);
 
   String _videoIdFromUrl(String url) {
     final uri = Uri.tryParse(url);

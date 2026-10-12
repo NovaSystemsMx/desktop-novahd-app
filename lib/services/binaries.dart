@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import '../config/app_config.dart';
+
 /// Localiza `yt-dlp` y `ffmpeg` sin depender del PATH heredado por el proceso.
 ///
 /// La app puede arrancar con un PATH desactualizado (instalaciones de winget
@@ -36,7 +38,7 @@ class Binaries {
     // 1) PATH del proceso (funciona si la sesión se abrió tras instalar).
     try {
       final w = await Process.run('where.exe', [command])
-          .timeout(const Duration(seconds: 5));
+          .timeout(AppConfig.lookupTimeout);
       if (w.exitCode == 0) {
         final line = (w.stdout as String)
             .split(RegExp(r'\r?\n'))

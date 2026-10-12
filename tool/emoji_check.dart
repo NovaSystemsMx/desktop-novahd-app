@@ -1,5 +1,7 @@
 // Verifica safeFileName: quita ilegales y emojis, conserva idiomas.
 // Uso: dart run tool/emoji_check.dart
+import 'dart:io';
+
 import 'package:desktop_novadh_app/models/track.dart';
 
 void main() {
@@ -14,14 +16,14 @@ void main() {
     spotifyUrl: '',
   );
   final name = t.safeFileName;
-  print('SAFE: [$name]');
+  stdout.writeln('SAFE: [$name]');
   final bad = RegExp(r'[<>:"/\\|?*]').hasMatch(name);
   final emoji = RegExp('[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]',
       unicode: true).hasMatch(name);
-  print('ilegales: $bad, emojis: $emoji');
+  stdout.writeln('ilegales: $bad, emojis: $emoji');
   if (bad || emoji) throw StateError('FAIL');
   for (final keep in ['Daft Punk', 'Música', '日本語']) {
     if (!name.contains(keep)) throw StateError('FAIL falta $keep');
   }
-  print('OK');
+  stdout.writeln('OK');
 }

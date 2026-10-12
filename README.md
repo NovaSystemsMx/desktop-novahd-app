@@ -47,6 +47,8 @@ Downloader de escritorio para Windows. Módulo actual: **Spotify**
 
 - Flutter stable + Visual Studio Build Tools 2022 con workload
   `Desktop development with C++` (MSVC v142, CMake, Windows 10 SDK).
+- Developer Mode de Windows activado (lo exigen los plugins nativos
+  al compilar: `cached_network_image`, `path_provider`, etc.).
 - `winget install yt-dlp.yt-dlp` y `winget install Gyan.FFmpeg`
   (Node.js existente se usa solo para retos JS de yt-dlp).
 
@@ -65,12 +67,14 @@ flutter build windows --debug   # exe en build\windows\x64\runner\Debug\
 lib/
   main.dart
   app.dart                        # shell: sidebar + vista + status bar
-  theme/one_dark_pro.dart         # paleta + primario azul #5F7EA6
+  theme/one_dark_pro.dart         # paleta + primario azul #5F7EA6 + AppText
+  config/app_config.dart          # tiempos, topes y calidades centrales
   models/track.dart               # pista + copyWith + safeFileName
   models/download_task.dart       # tarea de cola + estados
   services/spotify_service.dart   # orquesta busqueda + estado global
   services/ytmusic_service.dart   # replica ytmusicapi (search/continuations/player)
-  services/downloader_service.dart# cola + yt-dlp + etiquetado + avisos
+  services/downloader_service.dart# cola + reintentos + etiquetado + avisos
+  services/yt_dlp_engine.dart   # motor yt-dlp reutilizable (audio/JSON/procesos)
   services/audio_tagger.dart      # ID3v2.3 (equivale a mutagen)
   services/binaries.dart          # localiza yt-dlp/ffmpeg
   widgets/sidebar.dart
@@ -113,5 +117,5 @@ Escala tipográfica única (`AppText`, misma familia base):
   (limitación conocida, sin persistencia en beta).
 - Ventana maximizada con tamaño mínimo requiere plugin + Developer
   Mode de Windows (pendiente).
-- Selector de carpeta destino pendiente (diseño en discusión).
+- Selector de carpeta destino pendiente.
 - Ver `CHANGELOG.md` para el historial.
