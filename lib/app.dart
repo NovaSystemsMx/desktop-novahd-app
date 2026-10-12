@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/one_dark_pro.dart';
+import '../views/settings_view.dart';
 import '../views/spotify_view.dart';
 import '../widgets/sidebar.dart';
 import '../widgets/status_bar.dart';
@@ -50,7 +51,11 @@ class _NovadhAppShellState extends State<NovadhAppShell> {
                     ],
                   ),
                 ),
-                const Expanded(child: SpotifyView()),
+                Expanded(
+                  child: _tab == PlatformTab.settings
+                      ? const SettingsView()
+                      : const SpotifyView(),
+                ),
                 const StatusBar(),
               ],
             ),

@@ -30,8 +30,9 @@ Downloader de escritorio para Windows. Módulo actual: **Spotify**
 2. **Audio** (`lib/services/downloader_service.dart`): `yt-dlp` con
    `format bestaudio/best`, `-x --audio-format mp3 --audio-quality 0`
    (VBR ~320kbps), `--no-warnings`, reintento con
-   `player_client=android` ante 403. Sin `cookies.txt` (pendiente otro
-   enfoque anti-bot). Reintento progresivo: 3 intentos con esperas de
+   `player_client=android` ante 403. Anti-bot opcional desde Ajustes:
+   cookies pegadas (solo necesarias, cifradas) con cadena
+   guardadas → plano y registro del último uso. Reintento progresivo: 3 intentos con esperas de
    5s/15s; quitar una descarga activa mata yt-dlp + ffmpeg y limpia
    parciales (en fallo se conservan para reanudar).
 3. **Etiquetado** (`lib/services/audio_tagger.dart`): ID3v2.3 propio
@@ -75,13 +76,16 @@ lib/
   services/ytmusic_service.dart   # replica ytmusicapi (search/continuations/player)
   services/downloader_service.dart# cola + reintentos + etiquetado + avisos
   services/yt_dlp_engine.dart   # motor yt-dlp reutilizable (audio/JSON/procesos)
+  services/app_log.dart           # bitacora de sesion ([Fuente] HH:MM:SS)
   services/audio_tagger.dart      # ID3v2.3 (equivale a mutagen)
+  services/auth_store.dart        # cookies cifradas + vigencia (sin archivos)
   services/binaries.dart          # localiza yt-dlp/ffmpeg
   widgets/sidebar.dart
   widgets/results_table.dart      # header fijo + scroll + hover + pill
   widgets/download_queue_panel.dart
-  widgets/status_bar.dart
+  widgets/status_bar.dart         # barra de estado + avisos
   views/spotify_view.dart
+  views/settings_view.dart        # ajustes: auth, consola, configuracion
 tool/
   ytm_check.dart   # verifica busqueda YTM en vivo
   ytm_shape.dart   # diagnostico de formas de respuesta YTM

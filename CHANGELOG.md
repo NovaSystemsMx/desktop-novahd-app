@@ -1,3 +1,13 @@
+# CHANGELOG - Nova Hub Downloader
+
+## v0.7 (en curso) - Autenticacion anti-bot
+
+- Ajustes con login de YouTube, pegado de cookies (solo necesarias,
+  cifradas) y verificacion de vigencia con indicador.
+- Cadena por descarga: guardadas -> plano, con ultimo uso visible.
+- Consola de sesion con exportar a novahd-YYYYMMDD.log.
+- Requiere Developer Mode (plugins nativos).
+
 ## v0.6 (en curso) — Arquitectura limpia
 
 - `YtDlpEngine` extraído: motor yt-dlp reutilizable sin UI.

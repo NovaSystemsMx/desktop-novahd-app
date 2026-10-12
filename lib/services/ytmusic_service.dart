@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '../config/app_config.dart';
 import '../models/track.dart';
+import 'app_log.dart';
 import 'yt_dlp_engine.dart';
 
 /// Metadatos vía API interna de YouTube Music (equivale a `ytmusicapi`).
@@ -338,8 +339,8 @@ class YouTubeMusicService {
           }
         }
       }
-    } catch (_) {
-      // Respuesta con forma inesperada: se devuelve lo acumulado.
+    } catch (e) {
+      AppLog.instance.warning('YouTube Music', 'Forma inesperada: $e');
     }
     return tracks;
   }

@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../services/downloader_service.dart';
 import '../theme/one_dark_pro.dart';
 
-enum PlatformTab { spotify }
+enum PlatformTab { spotify, settings }
 
 class Sidebar extends StatelessWidget {
   final PlatformTab selected;
@@ -89,6 +89,13 @@ class Sidebar extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                OutlinedButton.icon(
+                  onPressed: () => onSelect(PlatformTab.settings),
+                  icon: const Icon(Icons.settings_rounded, size: 16),
+                  label: const Text('Ajustes',
+                      style: TextStyle(fontSize: 12)),
+                ),
+                const SizedBox(height: 8),
                 Consumer<DownloaderService>(
                   builder: (context, dl, _) => OutlinedButton.icon(
                     onPressed: dl.openDownloadsFolder,

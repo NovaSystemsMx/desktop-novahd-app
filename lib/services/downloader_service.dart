@@ -7,7 +7,9 @@ import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/download_task.dart';
 import '../models/track.dart';
+import 'app_log.dart';
 import 'audio_tagger.dart';
+import 'auth_store.dart';
 import 'binaries.dart';
 import 'yt_dlp_engine.dart';
 import 'ytmusic_service.dart';
@@ -26,6 +28,12 @@ class DownloaderService extends ChangeNotifier {
 
   /// Motor de procesos reutilizable (audio, JSON, futuros módulos).
   final YtDlpEngine engine = YtDlpEngine();
+
+  /// Última autenticación usada (para el indicador de Ajustes).
+  String lastAuthLabel = 'Sin auth';
+  bool lastAuthOk = false;
+
+  /// Índice de la opción de auth que funcionó (fija la que sirve).
 
   final List<DownloadTask> _queue = [];
   bool _working = false;
@@ -181,13 +189,15 @@ class DownloaderService extends ChangeNotifier {
       try {
         await _downloadWithYtDlp(task);
         return;
-      } catch (_) {
+      } catch (e) {
         if (!_queue.any((t) => t.id == task.id)) return;
         if (task.attempts >= AppConfig.maxAttempts) {
           task.status = DownloadStatus.failed;
           task.progress = 0;
           task.message =
               'No se pudo descargar tras ${AppConfig.maxAttempts} intentos. Revisa tu conexión.';
+          AppLog.instance.error(
+              'Descarga', '${task.track.safeFileName}: $e');
           notifyListeners();
           return;
         }
@@ -229,12 +239,24 @@ class DownloaderService extends ChangeNotifier {
     final before = await YtDlpEngine.snapshotMp3Paths(dir);
     final beforeAll = await YtDlpEngine.snapshotAllPaths(dir);
 
-    Future<int> attempt(List<String> extraArgs) =>
-        engine.downloadAudio(
+    // Auth por intento: guardadas (si hay) y luego plano.
+    // Las guardadas se materializan a un temporal que se borra al final.
+    final auth = AuthStore.instance;
+    File? cookieFile;
+    try {
+      if (auth.hasStoredCookies) {
+        cookieFile = await auth.materializeCookieFile();
+      }
+      final useStored = cookieFile != null;
+
+      Future<int> attempt(List<String> baseArgs, {required bool stored}) async {
+        lastAuthLabel = stored ? 'Guardadas' : 'Sin auth';
+        notifyListeners();
+        final exit = await engine.downloadAudio(
           source: source,
           outputTemplate: outTemplate,
           audioQuality: AppConfig.audioQuality,
-          extraArgs: extraArgs,
+          extraArgs: [...baseArgs, if (stored) ...['--cookiefile', cookieFile!.path]],
           onProgress: (p) {
             task.progress = p;
             task.message =
@@ -242,19 +264,32 @@ class DownloaderService extends ChangeNotifier {
             notifyListeners();
           },
         );
+        lastAuthOk = exit == 0;
+        return exit;
+      }
 
-    var exit = await attempt(const []);
-    if (exit != 0) {
-      // YouTube a veces responde 403 al cliente web: reintento con el
-      // cliente android antes de dar la descarga por fallida.
-      task.message = 'Reintentando con cliente alternativo…';
-      task.progress = 0;
-      notifyListeners();
-      exit = await attempt(
-          ['--extractor-args', 'youtube:player_client=android']);
-    }
-    if (exit != 0) {
-      throw Exception('yt-dlp salió con código $exit');
+      var exit = await attempt(const [], stored: useStored);
+      if (exit != 0 && useStored) {
+        // Contingencia: una vez sin auth.
+        task.message = 'Reintentando sin auth...';
+        task.progress = 0;
+        notifyListeners();
+        exit = await attempt(const [], stored: false);
+      }
+      if (exit != 0) {
+        // YouTube a veces responde 403 al cliente web: reintento con el
+        // cliente android antes de dar la descarga por fallida.
+        task.message = 'Reintentando con cliente alternativo...';
+        task.progress = 0;
+        notifyListeners();
+        exit = await attempt(
+            ['--extractor-args', 'youtube:player_client=android'], stored: useStored);
+      }
+      if (exit != 0) {
+        throw Exception('yt-dlp fallo, codigo $exit');
+      }
+    } finally {
+      await auth.discardCookieFile(cookieFile);
     }
 
     // Si se canceló mientras descargaba/convertía, no tocar nada más:
@@ -314,7 +349,8 @@ class DownloaderService extends ChangeNotifier {
         final details =
             await YouTubeMusicService().fetchVideoDetails(videoId);
         playerCover = details.cover;
-      } catch (_) {
+      } catch (e) {
+        AppLog.instance.warning('Etiquetado', 'Sin caratula HD: $e');
         // Se sigue con las carátulas del resultado de búsqueda.
       }
     }
@@ -337,7 +373,8 @@ class DownloaderService extends ChangeNotifier {
           coverBytes: cover,
         );
         return;
-      } catch (_) {
+      } catch (e) {
+        AppLog.instance.warning('Etiquetado', 'Fallo el tag propio: $e');
         // Reserva con ffmpeg solo para la carátula.
       }
     } else {
@@ -413,8 +450,8 @@ class DownloaderService extends ChangeNotifier {
       if (emb.exitCode == 0) {
         await File(tmp).rename(mp3Path);
       }
-    } catch (_) {
-      // No bloquea la descarga si falla la carátula.
+    } catch (e) {
+      AppLog.instance.warning('Reserva ffmpeg', e);
     } finally {
       try {
         if (cover != null && await cover.exists()) {

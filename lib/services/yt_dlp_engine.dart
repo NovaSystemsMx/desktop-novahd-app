@@ -20,6 +20,10 @@ class YtDlpEngine {
 
   Process? _activeProcess;
 
+  /// Salida de error de la última ejecución (acotada), para clasificar
+  /// fallos de autenticación (403, login, bot).
+  String lastStderr = '';
+
   /// Verifica el binario una sola vez (resultado cacheado).
   Future<bool> ensureAvailable() async {
     if (_checked) return _available;
@@ -82,6 +86,8 @@ class YtDlpEngine {
       // La salida en consola Windows puede traer bytes no UTF-8
       // (tildes en títulos): se decodifica de forma tolerante.
       const decoder = Utf8Decoder(allowMalformed: true);
+      final errBuf = StringBuffer();
+      lastStderr = '';
       proc.stdout.transform(decoder).listen((chunk) {
         if (onProgress == null) return;
         // yt-dlp imprime "[download]  45.2% ...": se extrae el porcentaje.
@@ -90,8 +96,17 @@ class YtDlpEngine {
         final pct = double.tryParse(m.group(1)!);
         if (pct != null) onProgress((pct / 100).clamp(0, 1));
       });
-      proc.stderr.transform(decoder).listen((_) {});
-      return await proc.exitCode;
+      proc.stderr.transform(decoder).listen((chunk) {
+        errBuf.write(chunk);
+        if (errBuf.length > 8192) {
+          final s = errBuf.toString();
+          errBuf.clear();
+          errBuf.write(s.substring(s.length - 8192));
+        }
+      });
+      final exit = await proc.exitCode;
+      lastStderr = errBuf.toString();
+      return exit;
     } finally {
       if (identical(_activeProcess, proc)) _activeProcess = null;
     }
