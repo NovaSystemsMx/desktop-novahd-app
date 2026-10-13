@@ -42,17 +42,11 @@ class DownloadQueuePanel extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Expanded(
-                          child: Row(
-                            children: [
-                              const Text(
-                                'COLA DE DESCARGAS',
-                                style: AppText.caps,
-                              ),
-                              const SizedBox(width: 10),
-                              const Text('•', style: AppText.caps),
-                              const SizedBox(width: 10),
-                              Text(q.length.toString(), style: AppText.caps),
-                            ],
+                          child: Text(
+                            'COLA DE DESCARGAS • ${q.length}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppText.caps,
                           ),
                         ),
                         Tooltip(
@@ -228,7 +222,7 @@ class _QueueTile extends StatelessWidget {
                   task.message,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppText.secondary.copyWith(fontSize: 11.5),
+                  style: AppText.secondary.copyWith(fontSize: 12),
                 ),
               ],
             ),

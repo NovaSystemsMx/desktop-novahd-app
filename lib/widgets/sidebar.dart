@@ -24,7 +24,7 @@ class Sidebar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 20, 18, 8),
+            padding: const EdgeInsets.fromLTRB(18, 20, 18, 10),
             child: Row(
               children: [
                 Container(
@@ -67,7 +67,7 @@ class Sidebar extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: EdgeInsets.fromLTRB(18, 14, 18, 6),
+            padding: EdgeInsets.fromLTRB(18, 16, 18, 8),
             child: Text(
               'PLATAFORMAS',
               style: AppText.caps.copyWith(letterSpacing: 1.1),
@@ -122,7 +122,7 @@ class Sidebar extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Nova Hub v0.5',
+                  'Nova Hub v0.6',
                   textAlign: TextAlign.center,
                   style: AppText.secondary.copyWith(fontSize: 11),
                 ),

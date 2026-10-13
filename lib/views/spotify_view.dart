@@ -111,10 +111,6 @@ class _SpotifyViewState extends State<SpotifyView> {
                       hintText: 'Busca canción, artista o álbum…',
                       hintStyle: AppText.secondary.copyWith(fontSize: 14),
                       prefixIcon: const Icon(Icons.search_rounded),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
-                      ),
                     ),
                   ),
                 ),
@@ -143,7 +139,7 @@ class _SpotifyViewState extends State<SpotifyView> {
                             ),
                           )
                         : const Icon(Icons.search_rounded, size: 20),
-                    label: const Text('Buscar', style: TextStyle(fontSize: 13)),
+                    label: const Text('Buscar', style: TextStyle(fontSize: 12)),
                   ),
                 ),
               ),

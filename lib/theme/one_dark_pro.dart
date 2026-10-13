@@ -31,6 +31,10 @@ abstract class OneDarkPro {
   /// Fondo de botón primario: mismo matiz que `blue`, aclarado para
   /// que el texto `darker` alcance 6.4:1 (el `blue` base daba 4.0:1).
   static const buttonBlue = Color(0xFF7FA3CC);
+
+  /// Fondo de botón de marca (login YouTube): `red` aclarado +8 por canal
+  /// para que el texto negro alcance 4.8:1 (el `red` base daba 4.3:1).
+  static const buttonRed = Color(0xFFAB646A);
 }
 
 ThemeData buildNovadhTheme() {

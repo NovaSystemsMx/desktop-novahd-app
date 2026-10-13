@@ -1,4 +1,4 @@
-# Nova Hub Downloader — v0.5 (Windows + Flutter)
+# Nova Hub Downloader — v0.6 (Windows + Flutter)
 
 Downloader de escritorio para Windows. Módulo actual: **Spotify**
 (búsqueda y metadatos vía YouTube Music, réplica del pipeline Python
@@ -106,12 +106,13 @@ windows/runner/   # titulo nativo "Nova Hub Downloader"
 
 ## Sistema visual
 
-Paleta One Dark Pro en 18 colores (`lib/theme/one_dark_pro.dart`):
+Paleta One Dark Pro en 19 colores (`lib/theme/one_dark_pro.dart`):
 13 base (6 fondos/grises + blanco, primario azul `#5F7EA6`,
 verde/amarillo/rojo de estados) + rampa de texto AA: `fgMid`
 `#9AA0AB` para secundarios y etiquetas, variantes `greenText` /
-`blueText` / `redText` para texto en color, y botón primario
-`#7FA3CC` con texto oscuro (6.4:1). Sin colores por plataforma.
+`blueText` / `redText` para texto en color, botón primario
+`#7FA3CC` con texto oscuro (6.4:1) y botón de marca `buttonRed`
+`#AB646A` con texto negro (4.8:1). Sin colores por plataforma.
 
 Escala tipográfica única (`AppText`, misma familia base):
 

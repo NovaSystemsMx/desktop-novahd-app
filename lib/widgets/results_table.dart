@@ -42,7 +42,7 @@ class ResultsTable extends StatelessWidget {
         const Expanded(
           child: Center(
             child: Padding(
-              padding: EdgeInsets.all(28),
+              padding: EdgeInsets.all(24),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

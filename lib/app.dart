@@ -48,7 +48,7 @@ class _NovadhAppShellState extends State<NovadhAppShell> {
                       ),
                       SizedBox(width: 8),
                       Text(
-                        'Nova Hub Downloader - Windows v0.5',
+                        'Nova Hub Downloader - Windows v0.6',
                         style: AppText.secondary.copyWith(fontSize: 12),
                       ),
                     ],

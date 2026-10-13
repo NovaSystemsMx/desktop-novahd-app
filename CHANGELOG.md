@@ -8,11 +8,14 @@
 - Foco visible por teclado + `Semantics`/live regions en errores,
   progreso de cola y estados; iconos decorativos excluidos.
 - Errores de búsqueda y guardado de cookies con Reintentar, foco
-  automático y mensaje inline persistente.
+  automático y mensaje inline (el veredicto se oculta a los 5s).
 - Tabla sin clic en fila (acción solo en Descargar); headers con
   ellipsis; targets de icon-only a 32px.
 - Botón Buscar con texto a 48px; tiles azules en estados vacíos;
   badges "Pronto"; status bar 36px con punto-anillo; tildes en copias.
+- Ajustes con flujo ordenado (pasos → acción), cards con header
+  full-bleed, campo de cookies con label y Paso 3; login en rojo
+  de marca con texto negro.
 - Ventana con tamaño inicial y mínimo según escala del display
   (100/125/150/200%) vía `window_manager` + `screen_retriever`.
 - Cola apilada bajo 860px de contenido en ventanas angostas.
@@ -25,7 +28,7 @@
 - Consola de sesion con exportar a novahd-YYYYMMDD.log.
 - Requiere Developer Mode (plugins nativos).
 
-## v0.6 (en curso) — Arquitectura limpia
+## v0.6 — Arquitectura limpia
 
 - `YtDlpEngine` extraído: motor yt-dlp reutilizable sin UI.
 - `MusicSearchService` (antes `SpotifyService`): fuera Spotify API.
