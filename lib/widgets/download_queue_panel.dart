@@ -41,11 +41,17 @@ class DownloadQueuePanel extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Expanded(
-                          child: Text(
-                            'COLA DE DESCARGAS • ${q.length}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppText.caps,
+                          child: Row(
+                            children: [
+                              const Text(
+                                'COLA DE DESCARGAS',
+                                style: AppText.caps,
+                              ),
+                              const SizedBox(width: 10),
+                              const Text('•', style: AppText.caps),
+                              const SizedBox(width: 10),
+                              Text(q.length.toString(), style: AppText.caps),
+                            ],
                           ),
                         ),
                         Tooltip(
@@ -86,51 +92,40 @@ class DownloadQueuePanel extends StatelessWidget {
                 ),
                 if (q.isEmpty)
                   Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        // Con poca altura el contenido hace scroll en vez
-                        // de desbordar; con espacio de sobra queda centrado.
-                        return SingleChildScrollView(
-                          padding: const EdgeInsets.all(24),
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              minHeight: constraints.maxHeight - 48,
-                            ),
-                            child: Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const ExcludeSemantics(
-                                    child: Icon(
-                                      Icons.downloading_rounded,
-                                      color: OneDarkPro.fgDim,
-                                      size: 30,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  const Text(
-                                    'La cola esta vacia.\nDescarga cualquier resultado y aparecera aqui con su progreso.',
-                                    textAlign: TextAlign.center,
-                                    style: AppText.secondary,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  OutlinedButton.icon(
-                                    onPressed: dl.openDownloadsFolder,
-                                    icon: const Icon(
-                                      Icons.folder_open_rounded,
-                                      size: 16,
-                                    ),
-                                    label: const Text(
-                                      'Abrir descargas',
-                                      style: TextStyle(fontSize: 12),
-                                    ),
-                                  ),
-                                ],
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const ExcludeSemantics(
+                              child: Icon(
+                                Icons.downloading_rounded,
+                                color: OneDarkPro.fgDim,
+                                size: 30,
                               ),
                             ),
-                          ),
-                        );
-                      },
+                            const SizedBox(height: 10),
+                            const Text(
+                              'La cola esta vacia.\nDescarga cualquier resultado y aparecera aqui con su progreso.',
+                              textAlign: TextAlign.center,
+                              style: AppText.secondary,
+                            ),
+                            const SizedBox(height: 12),
+                            OutlinedButton.icon(
+                              onPressed: dl.openDownloadsFolder,
+                              icon: const Icon(
+                                Icons.folder_open_rounded,
+                                size: 16,
+                              ),
+                              label: const Text(
+                                'Abrir descargas',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   )
                 else
