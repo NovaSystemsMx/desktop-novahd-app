@@ -1,5 +1,19 @@
 # CHANGELOG - Nova Hub Downloader
 
+## (en curso) — Accesibilidad y contraste UI
+
+- Rampa de texto AA: `fgMid` para secundarios/caps y variantes
+  `greenText`/`blueText`/`redText`; botón primario `#7FA3CC`
+  con texto oscuro (6.4:1).
+- Foco visible por teclado + `Semantics`/live regions en errores,
+  progreso de cola y estados; iconos decorativos excluidos.
+- Errores de búsqueda y guardado de cookies con Reintentar, foco
+  automático y mensaje inline persistente.
+- Tabla sin clic en fila (acción solo en Descargar), estado "sin
+  resultados" con sugerencias, labels en campos y tooltips.
+- Cola apilada bajo 860px; targets de icon-only a 32px; rótulo
+  "Limpiar completadas y fallidas".
+
 ## v0.7 (en curso) - Autenticacion anti-bot
 
 - Ajustes con login de YouTube, pegado de cookies (solo necesarias,

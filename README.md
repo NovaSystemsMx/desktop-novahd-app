@@ -14,7 +14,9 @@ Downloader de escritorio para Windows. Módulo actual: **Spotify**
 - Barra de estado persistente: refleja búsquedas, cola y avisos
   ("Agregado a la cola") sin popups.
 - Tema One Dark Pro con azul `#5F7EA6` como color primario; verde,
-  amarillo y rojo solo para estados de descarga y errores.
+  amarillo y rojo solo para estados de descarga y errores. Rampa de
+  texto AA (`fgMid`, variantes `*Text`, botón `#7FA3CC` con texto
+  oscuro): secundarios y etiquetas ≥5.3:1 en los tres fondos.
 - Destino: carpeta Descargas de Windows (`%USERPROFILE%\Downloads`),
   archivos `Artista - Título.mp3`.
 
@@ -72,7 +74,7 @@ lib/
   config/app_config.dart          # tiempos, topes y calidades centrales
   models/track.dart               # pista + copyWith + safeFileName
   models/download_task.dart       # tarea de cola + estados
-  services/spotify_service.dart   # orquesta busqueda + estado global
+  services/music_search_service.dart # busqueda + estado global
   services/ytmusic_service.dart   # replica ytmusicapi (search/continuations/player)
   services/downloader_service.dart# cola + reintentos + etiquetado + avisos
   services/yt_dlp_engine.dart   # motor yt-dlp reutilizable (audio/JSON/procesos)
@@ -81,8 +83,9 @@ lib/
   services/auth_store.dart        # cookies cifradas + vigencia (sin archivos)
   services/binaries.dart          # localiza yt-dlp/ffmpeg
   widgets/sidebar.dart
-  widgets/results_table.dart      # header fijo + scroll + hover + pill
-  widgets/download_queue_panel.dart
+  widgets/results_table.dart      # header fijo + scroll + pill "En cola";
+                                  # accion solo en boton Descargar (sin clic en fila)
+  widgets/download_queue_panel.dart # cola + CTA en vacio + tooltips
   widgets/status_bar.dart         # barra de estado + avisos
   views/spotify_view.dart
   views/settings_view.dart        # ajustes: auth, consola, configuracion
@@ -91,18 +94,20 @@ tool/
   ytm_shape.dart   # diagnostico de formas de respuesta YTM
   tag_check.dart   # verifica etiquetado ID3 en un MP3 real
   emoji_check.dart # verifica safeFileName (ilegales y emojis)
+  engine_check.dart # verifica motor yt-dlp reutilizable
 docs/
   AUDITORIA_BETA.md    # auditoria pre-beta (producto)
-  AUDITORIA_CODIGO.md  # auditoria de arquitectura y optimizacion
 windows/runner/   # titulo nativo "Nova Hub Downloader"
 ```
 
 ## Sistema visual
 
-Paleta One Dark Pro recortada a 13 colores
-(`lib/theme/one_dark_pro.dart`): 6 fondos/grises + blanco, primario
-azul `#5F7EA6`, y verde/amarillo/rojo solo para estados de descarga
-y errores. Sin colores por plataforma.
+Paleta One Dark Pro en 18 colores (`lib/theme/one_dark_pro.dart`):
+13 base (6 fondos/grises + blanco, primario azul `#5F7EA6`,
+verde/amarillo/rojo de estados) + rampa de texto AA: `fgMid`
+`#9AA0AB` para secundarios y etiquetas, variantes `greenText` /
+`blueText` / `redText` para texto en color, y botón primario
+`#7FA3CC` con texto oscuro (6.4:1). Sin colores por plataforma.
 
 Escala tipográfica única (`AppText`, misma familia base):
 
@@ -114,6 +119,13 @@ Escala tipográfica única (`AppText`, misma familia base):
 | `secondary` 12.5 | artistas, hints, mensajes |
 | `caps` 11/w700 + tracking | headers, badges, secciones |
 | `input` 14 | campo de búsqueda |
+
+Accesibilidad (desktop): anillo de foco visible por teclado,
+`Semantics` con live regions en errores y progreso, iconos
+decorativos excluidos del árbol, tooltips en icon-only y textos
+truncados. Errores con botón Reintentar y foco automático; estado
+"sin resultados" con sugerencias; layout responsive (cola apilada
+bajo 860px).
 
 ## Notas
 
