@@ -26,6 +26,7 @@ class _SettingsViewState extends State<SettingsView> {
   bool _checkOk = false;
   bool? _storedOk;
   bool _saving = false;
+  String? _saveError;
 
   @override
   void initState() {
@@ -35,6 +36,7 @@ class _SettingsViewState extends State<SettingsView> {
       Future.microtask(_silentStoredCheck);
     }
   }
+
   @override
   void dispose() {
     _cookiesCtrl.dispose();
@@ -45,15 +47,15 @@ class _SettingsViewState extends State<SettingsView> {
   Future<void> _openLogin() async {
     // Flujo oficial de login para YouTube (estable, sin parámetros
     // de sesión capturados que caducan).
-    const url = 'https://accounts.google.com/ServiceLogin'
+    const url =
+        'https://accounts.google.com/ServiceLogin'
         '?service=youtube&passive=true&continue=https://www.youtube.com/';
     try {
       // Abre el navegador predeterminado sin plugins extra.
       await Process.run('explorer', [url]);
     } catch (_) {
       try {
-        await Process.run(
-            'cmd', ['/c', 'start', '', url]);
+        await Process.run('cmd', ['/c', 'start', '', url]);
       } catch (e) {
         AppLog.instance.error('Ajustes', 'No se pudo abrir el navegador');
       }
@@ -92,11 +94,13 @@ class _SettingsViewState extends State<SettingsView> {
     setState(() => _storedOk = r.ok);
   }
 
-
   // Punto 3: valida antes de guardar; si falla, restaura las previas.
   Future<void> _saveCookies() async {
     final auth = AuthStore.instance;
-    setState(() => _saving = true);
+    setState(() {
+      _saving = true;
+      _saveError = null;
+    });
     String? previous;
     try {
       previous = await auth.readStoredCookies();
@@ -108,20 +112,26 @@ class _SettingsViewState extends State<SettingsView> {
         } else {
           await auth.saveCookies(previous);
         }
-        throw Exception('No validas (${saved.saved} de ${saved.total}): ${r.detail}');
+        throw Exception(
+          'No validas (${saved.saved} de ${saved.total}): ${r.detail}',
+        );
       }
       _cookiesCtrl.clear();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Guardadas ${saved.saved} de ${saved.total} y validas.')),
+        SnackBar(
+          content: Text(
+            'Guardadas ${saved.saved} de ${saved.total} y validas.',
+          ),
+        ),
       );
       setState(() => _storedOk = true);
       await _verify();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      setState(() => _saveError = msg);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -135,8 +145,10 @@ class _SettingsViewState extends State<SettingsView> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: OneDarkPro.card,
-        title: const Text('Cookies guardadas',
-            style: TextStyle(color: OneDarkPro.white)),
+        title: const Text(
+          'Cookies guardadas',
+          style: TextStyle(color: OneDarkPro.white),
+        ),
         content: SizedBox(
           width: 520,
           height: 300,
@@ -144,7 +156,10 @@ class _SettingsViewState extends State<SettingsView> {
             child: SelectableText(
               text,
               style: const TextStyle(
-                  color: OneDarkPro.fg, fontSize: 11, fontFamily: 'Consolas'),
+                color: OneDarkPro.fg,
+                fontSize: 11,
+                fontFamily: 'Consolas',
+              ),
             ),
           ),
         ),
@@ -157,13 +172,13 @@ class _SettingsViewState extends State<SettingsView> {
       ),
     );
   }
+
   Future<void> _exportLog() async {
     final log = AppLog.instance;
     if (log.entries.isEmpty) return;
     final now = DateTime.now();
     String two(int n) => n.toString().padLeft(2, '0');
-    final name =
-        'novahd-${now.year}${two(now.month)}${two(now.day)}.log';
+    final name = 'novahd-${now.year}${two(now.month)}${two(now.day)}.log';
     final location = await getSaveLocation(
       suggestedName: name,
       acceptedTypeGroups: const [
@@ -174,14 +189,12 @@ class _SettingsViewState extends State<SettingsView> {
     try {
       await File(location.path).writeAsString(log.exportText());
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Log exportado.')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Log exportado.')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo exportar: $e')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('No se pudo exportar: $e')));
     }
   }
 
@@ -203,50 +216,76 @@ class _SettingsViewState extends State<SettingsView> {
         children: [
           Row(
             children: [
-              const Text('Ajustes',
-                  style: TextStyle(
-                      color: OneDarkPro.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800)),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: OneDarkPro.blue.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const ExcludeSemantics(
+                  child: Icon(Icons.settings_rounded, color: OneDarkPro.blue),
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Ajustes', style: AppText.hero),
+                    Text(
+                      'Sesión, descargas y consola',
+                      style: TextStyle(color: OneDarkPro.fgDim, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 18),
-          _section('AUTENTICACION YOUTUBE'),
-          const SizedBox(height: 8),
           _card([
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Si YouTube bloquea descargas, el pipeline usa tus cookies guardadas.',
-                    style: TextStyle(
-                        color: OneDarkPro.fgDim, fontSize: 12),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Consumer<AuthStore>(
-                  builder: (context, authTop, _) => Tooltip(
-                    message: !authTop.hasStoredCookies
-                        ? 'Sin cookies guardadas.'
-                        : _storedOk == null
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: const BoxDecoration(
+                color: OneDarkPro.darker,
+                border: Border(bottom: BorderSide(color: OneDarkPro.border)),
+              ),
+              child: SizedBox(
+                height: 24,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Expanded(
+                      child: Text('AUTENTICACIÓN YOUTUBE', style: AppText.caps),
+                    ),
+                    Consumer2<AuthStore, DownloaderService>(
+                      builder: (context, authTop, dl, _) {
+                        final base = !authTop.hasStoredCookies
+                            ? 'Sin cookies guardadas.'
+                            : _storedOk == null
                             ? 'Cookies guardadas, sin verificar.'
                             : _storedOk!
-                                ? 'Cookies validas.'
-                                : 'Cookies no validas.',
-                    child: Icon(
-                      Icons.cookie_rounded,
-                      size: 20,
-                      color: !authTop.hasStoredCookies || _storedOk == null
-                          ? OneDarkPro.fgDim
-                          : _storedOk!
-                              ? OneDarkPro.green
-                              : OneDarkPro.red,
+                            ? 'Cookies validas.'
+                            : 'Cookies no validas.';
+                        return Tooltip(
+                          message: '$base Ultimo uso: ${dl.lastAuthLabel}.',
+                          child: Icon(
+                            Icons.cookie_rounded,
+                            size: 20,
+                            color:
+                                !authTop.hasStoredCookies || _storedOk == null
+                                ? OneDarkPro.fgDim
+                                : _storedOk!
+                                ? OneDarkPro.greenText
+                                : OneDarkPro.redText,
+                          ),
+                        );
+                      },
                     ),
-                  ),
-                  ),
-                ],
+                  ],
                 ),
+              ),
+            ),
             Wrap(
               spacing: 10,
               children: [
@@ -256,10 +295,11 @@ class _SettingsViewState extends State<SettingsView> {
                     backgroundColor: const Color(0xFFE62117),
                     foregroundColor: Colors.white,
                   ),
-                  icon: const Icon(Icons.play_circle_fill_rounded,
-                      size: 18),
-                  label: const Text('Iniciar Sesion',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  icon: const Icon(Icons.play_circle_fill_rounded, size: 18),
+                  label: const Text(
+                    'Iniciar Sesion',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
                 ),
               ],
             ),
@@ -269,15 +309,13 @@ class _SettingsViewState extends State<SettingsView> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Text(
-                    'Paso 1: instala la extension GET COOKIES LOCALLY en tu navegador.' ,
-                    style: TextStyle(
-                        color: OneDarkPro.fg, fontSize: 12.5),
+                    'Paso 1: instala la extension GET COOKIES LOCALLY en tu navegador.',
+                    style: TextStyle(color: OneDarkPro.fg, fontSize: 12.5),
                   ),
                   const SizedBox(height: 6),
                   const Text(
                     'Paso 2: abre YouTube con tu sesion iniciada, copia las cookies y pegalas abajo.',
-                    style: TextStyle(
-                        color: OneDarkPro.fg, fontSize: 12.5),
+                    style: TextStyle(color: OneDarkPro.fg, fontSize: 12.5),
                   ),
                   const SizedBox(height: 10),
                   TextField(
@@ -285,22 +323,68 @@ class _SettingsViewState extends State<SettingsView> {
                     maxLines: 4,
                     minLines: 3,
                     decoration: const InputDecoration(
-                      hintText:
-                          'Pega aquí las cookies (formato Netscape, ej. de GET COOKIES LOCALLY)...',
+                      hintText: 'Pega aquí las cookies (formato Netscape, ej. de GET COOKIES LOCALLY)...',
                     ),
                   ),
                   const SizedBox(height: 8),
+                  if (_saveError != null)
+                    Semantics(
+                      container: true,
+                      liveRegion: true,
+                      label: 'Error al guardar cookies: $_saveError',
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: OneDarkPro.red.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: OneDarkPro.red.withValues(alpha: 0.4),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const ExcludeSemantics(
+                              child: Icon(
+                                Icons.error_outline_rounded,
+                                color: OneDarkPro.redText,
+                                size: 18,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _saveError!,
+                                style: AppText.body.copyWith(
+                                  color: OneDarkPro.redText,
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            TextButton.icon(
+                              onPressed: _saving ? null : _saveCookies,
+                              icon: const Icon(Icons.refresh_rounded, size: 16),
+                              label: const Text(
+                                'Reintentar',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   Wrap(
                     spacing: 10,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       ElevatedButton.icon(
-                        onPressed:
-                            _saving ? null : _saveCookies,
-                        icon: const Icon(Icons.save_rounded,
-                            size: 16),
-                        label: const Text('Guardar cookies',
-                            style: TextStyle(fontSize: 12)),
+                        onPressed: _saving ? null : _saveCookies,
+                        icon: const Icon(Icons.save_rounded, size: 16),
+                        label: const Text(
+                          'Guardar cookies',
+                          style: TextStyle(fontSize: 12),
+                        ),
                       ),
                       OutlinedButton.icon(
                         onPressed: auth.hasStoredCookies
@@ -311,43 +395,48 @@ class _SettingsViewState extends State<SettingsView> {
                                 });
                               }
                             : null,
-                        icon: const Icon(Icons.delete_outline_rounded,
-                            size: 16),
-                        label: const Text('Borrar',
-                            style: TextStyle(fontSize: 12)),
+                        icon: const Icon(
+                          Icons.delete_outline_rounded,
+                          size: 16,
+                        ),
+                        label: const Text(
+                          'Borrar',
+                          style: TextStyle(fontSize: 12),
+                        ),
                       ),
                       OutlinedButton.icon(
-                        onPressed: auth.hasStoredCookies
-                            ? _viewCookies
-                            : null,
-                        icon: const Icon(Icons.visibility_rounded,
-                            size: 16),
-                        label: const Text('Ver',
-                            style: TextStyle(fontSize: 12)),
+                        onPressed: auth.hasStoredCookies ? _viewCookies : null,
+                        icon: const Icon(Icons.visibility_rounded, size: 16),
+                        label: const Text(
+                          'Ver',
+                          style: TextStyle(fontSize: 12),
+                        ),
                       ),
                       OutlinedButton.icon(
-                        onPressed:
-                            _checking || !auth.hasStoredCookies ? null : _verify,
-                        icon: const Icon(Icons.verified_rounded,
-                            size: 16),
-                        label: const Text('Verificar',
-                            style: TextStyle(fontSize: 12)),
+                        onPressed: _checking || !auth.hasStoredCookies
+                            ? null
+                            : _verify,
+                        icon: const Icon(Icons.verified_rounded, size: 16),
+                        label: const Text(
+                          'Verificar',
+                          style: TextStyle(fontSize: 12),
+                        ),
                       ),
                       if (_checking)
                         const SizedBox(
                           width: 14,
                           height: 14,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2),
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                       if (_checkResult != null)
                         Text(
                           _checkOk ? 'Cookies validas.' : 'Cookies invalidas.',
                           style: TextStyle(
-                              color: _checkOk
-                                  ? OneDarkPro.green
-                                  : OneDarkPro.red,
-                              fontSize: 12),
+                            color: _checkOk
+                                ? OneDarkPro.greenText
+                                : OneDarkPro.redText,
+                            fontSize: 12,
+                          ),
                         ),
                     ],
                   ),
@@ -357,7 +446,9 @@ class _SettingsViewState extends State<SettingsView> {
                       'Último uso: ${dl.lastAuthLabel}'
                       '${dl.lastAuthOk ? ' · funcionó' : ''}',
                       style: const TextStyle(
-                          color: OneDarkPro.fgDim, fontSize: 12),
+                        color: OneDarkPro.fgDim,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ],
@@ -375,25 +466,26 @@ class _SettingsViewState extends State<SettingsView> {
                   message: 'Limpiar consola',
                   child: IconButton(
                     onPressed: AppLog.instance.clear,
-                    icon: const Icon(
-                        Icons.cleaning_services_rounded,
-                        size: 18),
+                    icon: const Icon(Icons.cleaning_services_rounded, size: 18),
                     color: OneDarkPro.fgDim,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
-                        minWidth: 28, minHeight: 28),
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ),
                 ),
                 Tooltip(
                   message: 'Exportar log (novahd-YYYYMMDD.log)',
                   child: IconButton(
                     onPressed: _exportLog,
-                    icon: const Icon(Icons.download_rounded,
-                        size: 18),
+                    icon: const Icon(Icons.download_rounded, size: 18),
                     color: OneDarkPro.blue,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
-                        minWidth: 28, minHeight: 28),
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ),
                 ),
               ],
@@ -412,9 +504,7 @@ class _SettingsViewState extends State<SettingsView> {
                     return const Center(
                       child: Text(
                         'Sin eventos en esta sesión.',
-                        style: TextStyle(
-                            color: OneDarkPro.fgDim,
-                            fontSize: 12),
+                        style: TextStyle(color: OneDarkPro.fgDim, fontSize: 12),
                       ),
                     );
                   }
@@ -425,19 +515,19 @@ class _SettingsViewState extends State<SettingsView> {
                     itemBuilder: (context, i) {
                       final e = log.entries[i];
                       final color = switch (e.level) {
-                        LogLevel.error => OneDarkPro.red,
+                        LogLevel.error => OneDarkPro.redText,
                         LogLevel.warning => OneDarkPro.yellow,
-                        LogLevel.info => OneDarkPro.fgDim,
+                        LogLevel.info => OneDarkPro.fgMid,
                       };
                       return Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 1.5),
+                        padding: const EdgeInsets.symmetric(vertical: 1.5),
                         child: SelectableText(
                           e.line,
                           style: TextStyle(
-                              color: color,
-                              fontSize: 11.5,
-                              fontFamily: 'Consolas'),
+                            color: color,
+                            fontSize: 11.5,
+                            fontFamily: 'Consolas',
+                          ),
                         ),
                       );
                     },
@@ -452,8 +542,7 @@ class _SettingsViewState extends State<SettingsView> {
           _card(const [
             Text(
               'Próximamente: carpeta destino, calidad y concurrencia.',
-              style:
-                  TextStyle(color: OneDarkPro.fgDim, fontSize: 12),
+              style: TextStyle(color: OneDarkPro.fgDim, fontSize: 12),
             ),
           ]),
         ],
@@ -462,12 +551,15 @@ class _SettingsViewState extends State<SettingsView> {
   }
 
   Widget _section(String text) {
-    return Text(text,
-        style: const TextStyle(
-            color: OneDarkPro.fgDim,
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.8));
+    return Text(
+      text,
+      style: const TextStyle(
+        color: OneDarkPro.fgDim,
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.8,
+      ),
+    );
   }
 
   Widget _card(List<Widget> children) {
@@ -485,4 +577,3 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 }
-

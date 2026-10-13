@@ -45,7 +45,9 @@ class ResultsTable extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.search_rounded, color: OneDarkPro.fgDim),
+                  ExcludeSemantics(
+                    child: Icon(Icons.search_rounded, color: OneDarkPro.fgDim),
+                  ),
                   SizedBox(width: 10),
                   Flexible(
                     child: Text(
@@ -103,6 +105,8 @@ class ResultsTable extends StatelessWidget {
   }
 
   Widget _rowsList() {
+    // Nota: ListView.separated no admite itemExtent; las filas igual
+    // usan altura uniforme (64) y ValueKey para un diff barato.
     return ListView.separated(
       itemCount: tracks.length,
       separatorBuilder: (_, _) =>
@@ -110,114 +114,124 @@ class ResultsTable extends StatelessWidget {
       itemBuilder: (context, i) {
         final t = tracks[i];
         final queued = queuedIds.contains(t.id);
-        return Material(
+        // Fila no interactiva: la única acción vive en el botón
+        // "Descargar" (evita doble tab-stop y toques accidentales).
+        return Container(
+          key: ValueKey(t.id),
           color: Colors.transparent,
-          child: InkWell(
-            hoverColor: OneDarkPro.cardHover,
-            onTap: queued ? null : () => onDownload(t),
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: t.imageSmall.isNotEmpty
-                        ? CachedNetworkImage(
-                            imageUrl: t.imageSmall,
-                            width: 44,
-                            height: 44,
-                            fit: BoxFit.cover,
-                            placeholder: (_, _) => _coverFallback(),
-                            errorWidget: (_, _, _) => _coverFallback(),
-                          )
-                        : _coverFallback(),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(t.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppText.title),
-                        const SizedBox(height: 2),
-                        Text(t.artistsLabel,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppText.secondary
-                                .copyWith(fontSize: 12)),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: Text(t.album,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style:
-                            AppText.body.copyWith(fontSize: 12.5)),
-                  ),
-                  SizedBox(
-                    width: 70,
-                    child: Text(t.durationLabel,
-                        style: AppText.secondary),
-                  ),
-                  SizedBox(
-                    width: 140,
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: queued
-                          ? Container(
-                              width: 120,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: OneDarkPro.blue
-                                    .withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                    color: OneDarkPro.blue
-                                        .withValues(alpha: 0.4)),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.check_circle_rounded,
-                                      color: OneDarkPro.blue, size: 16),
-                                  SizedBox(width: 6),
-                                  Text('En cola',
-                                      style: AppText.body.copyWith(
-                                          color: OneDarkPro.blue,
-                                          fontWeight: FontWeight.w600)),
-                                ],
-                              ),
-                            )
-                          : SizedBox(
-                              width: 120,
-                              child: ElevatedButton.icon(
-                              onPressed: () => onDownload(t),
-                              icon: const Icon(Icons.download_rounded,
-                                  size: 16),
-                              label: const Text('Descargar',
-                                  style: TextStyle(fontSize: 12)),
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 14, vertical: 14),
-                                minimumSize: const Size(0, 44),
-                                tapTargetSize:
-                                    MaterialTapTargetSize.shrinkWrap,
-                              ),
-                            ),
-                            ),
-                    ),
-                  ),
-                ],
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: t.imageSmall.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: t.imageSmall,
+                        width: 44,
+                        height: 44,
+                        fit: BoxFit.cover,
+                        placeholder: (_, _) => _coverFallback(),
+                        errorWidget: (_, _, _) => _coverFallback(),
+                      )
+                    : _coverFallback(),
               ),
-            ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.title,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      t.artistsLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.secondary.copyWith(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  t.album,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.body.copyWith(fontSize: 12.5),
+                ),
+              ),
+              SizedBox(
+                width: 70,
+                child: Text(t.durationLabel, style: AppText.secondary),
+              ),
+              SizedBox(
+                width: 140,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: queued
+                      ? Container(
+                          width: 120,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: OneDarkPro.blue.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: OneDarkPro.blue.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ExcludeSemantics(
+                                child: Icon(
+                                  Icons.check_circle_rounded,
+                                  color: OneDarkPro.blueText,
+                                  size: 16,
+                                ),
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                'En cola',
+                                style: AppText.body.copyWith(
+                                  color: OneDarkPro.blueText,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : SizedBox(
+                          width: 120,
+                          child: ElevatedButton.icon(
+                            onPressed: () => onDownload(t),
+                            icon: const Icon(Icons.download_rounded, size: 16),
+                            label: const Text(
+                              'Descargar',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 14,
+                              ),
+                              minimumSize: const Size(0, 44),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+            ],
           ),
         );
       },
@@ -229,8 +243,13 @@ class ResultsTable extends StatelessWidget {
       width: 44,
       height: 44,
       color: OneDarkPro.darker,
-      child: const Icon(Icons.music_note_rounded,
-          color: OneDarkPro.fgDim, size: 20),
+      child: const ExcludeSemantics(
+        child: Icon(
+          Icons.music_note_rounded,
+          color: OneDarkPro.fgDim,
+          size: 20,
+        ),
+      ),
     );
   }
 }

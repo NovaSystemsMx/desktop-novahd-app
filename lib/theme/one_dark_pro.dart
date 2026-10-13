@@ -11,12 +11,26 @@ abstract class OneDarkPro {
 
   static const fg = Color(0xFFABB2BF);
   static const fgDim = Color(0xFF7F848E);
+
+  /// Texto secundario AA sobre background/sidebar/darker (≥5.3:1).
+  /// `fgDim` queda reservado a iconos decorativos y placeholders grandes.
+  static const fgMid = Color(0xFF9AA0AB);
   static const white = Color(0xFFD7DAE0);
 
-  static const green  = Color(0xFF6C9C54);
-  static const blue   = Color(0xFF5F7EA6);
-  static const red    = Color(0xFFA35C62);
+  static const green = Color(0xFF6C9C54);
+  static const blue = Color(0xFF5F7EA6);
+  static const red = Color(0xFFA35C62);
   static const yellow = Color(0xFFA38B5C);
+
+  /// Variantes de texto AA (≥6:1 sobre los tres fondos).
+  /// Usar estas —no los tonos base— para cualquier texto en color.
+  static const greenText = Color(0xFF9AD08A);
+  static const blueText = Color(0xFF8AB4F8);
+  static const redText = Color(0xFFE0989D);
+
+  /// Fondo de botón primario: mismo matiz que `blue`, aclarado para
+  /// que el texto `darker` alcance 6.4:1 (el `blue` base daba 4.0:1).
+  static const buttonBlue = Color(0xFF7FA3CC);
 }
 
 ThemeData buildNovadhTheme() {
@@ -32,12 +46,22 @@ ThemeData buildNovadhTheme() {
     colorScheme: scheme,
     scaffoldBackgroundColor: OneDarkPro.background,
     splashFactory: NoSplash.splashFactory,
+    // Anillo de foco visible para navegación por teclado (desktop).
+    focusColor: OneDarkPro.blueText.withValues(alpha: 0.22),
+    hoverColor: OneDarkPro.cardHover,
+    highlightColor: OneDarkPro.blueText.withValues(alpha: 0.12),
     textTheme: const TextTheme(
       bodyLarge: TextStyle(color: OneDarkPro.fg),
       bodyMedium: TextStyle(color: OneDarkPro.fg),
-      bodySmall: TextStyle(color: OneDarkPro.fgDim),
-      titleLarge: TextStyle(color: OneDarkPro.white, fontWeight: FontWeight.w700),
-      titleMedium: TextStyle(color: OneDarkPro.white, fontWeight: FontWeight.w600),
+      bodySmall: TextStyle(color: OneDarkPro.fgMid),
+      titleLarge: TextStyle(
+        color: OneDarkPro.white,
+        fontWeight: FontWeight.w700,
+      ),
+      titleMedium: TextStyle(
+        color: OneDarkPro.white,
+        fontWeight: FontWeight.w600,
+      ),
       titleSmall: TextStyle(color: OneDarkPro.fg, fontWeight: FontWeight.w600),
     ),
     appBarTheme: const AppBarTheme(
@@ -45,11 +69,14 @@ ThemeData buildNovadhTheme() {
       foregroundColor: OneDarkPro.white,
       elevation: 0,
     ),
-    dividerTheme: const DividerThemeData(color: OneDarkPro.border, thickness: 1),
+    dividerTheme: const DividerThemeData(
+      color: OneDarkPro.border,
+      thickness: 1,
+    ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: OneDarkPro.darker,
-      hintStyle: const TextStyle(color: OneDarkPro.fgDim),
+      hintStyle: const TextStyle(color: OneDarkPro.fgMid),
       prefixIconColor: OneDarkPro.fgDim,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
@@ -61,13 +88,13 @@ ThemeData buildNovadhTheme() {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: OneDarkPro.blue, width: 1.4),
+        borderSide: const BorderSide(color: OneDarkPro.blueText, width: 2),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: OneDarkPro.blue,
+        backgroundColor: OneDarkPro.buttonBlue,
         foregroundColor: const Color(0xFF1B1E23),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -101,11 +128,17 @@ ThemeData buildNovadhTheme() {
 abstract class AppText {
   /// Hero 18/w800: título principal de vista.
   static const hero = TextStyle(
-      color: OneDarkPro.white, fontSize: 18, fontWeight: FontWeight.w800);
+    color: OneDarkPro.white,
+    fontSize: 18,
+    fontWeight: FontWeight.w800,
+  );
 
   /// Título 13.5/w600: canciones, items, títulos de panel.
   static const title = TextStyle(
-      color: OneDarkPro.white, fontSize: 13.5, fontWeight: FontWeight.w600);
+    color: OneDarkPro.white,
+    fontSize: 13.5,
+    fontWeight: FontWeight.w600,
+  );
 
   /// Cuerpo 12: texto funcional (botones, inputs, álbumes).
   static const body = TextStyle(color: OneDarkPro.fg, fontSize: 12);
@@ -113,14 +146,14 @@ abstract class AppText {
   /// Entrada 14: texto del campo de búsqueda (hero de la vista).
   static const input = TextStyle(color: OneDarkPro.fg, fontSize: 14);
 
-  /// Secundario 12.5: artistas, hints, mensajes.
-  static const secondary =
-      TextStyle(color: OneDarkPro.fgDim, fontSize: 12.5);
+  /// Secundario 12.5: artistas, hints, mensajes (AA en los 3 fondos).
+  static const secondary = TextStyle(color: OneDarkPro.fgMid, fontSize: 12.5);
 
-  /// Etiqueta 11/w700 con tracking: headers, badges, secciones.
+  /// Etiqueta 11/w700 con tracking: headers, badges, secciones (AA).
   static const caps = TextStyle(
-      color: OneDarkPro.fgDim,
-      fontSize: 11,
-      fontWeight: FontWeight.w700,
-      letterSpacing: 0.8);
+    color: OneDarkPro.fgMid,
+    fontSize: 11,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.8,
+  );
 }
