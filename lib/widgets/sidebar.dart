@@ -75,7 +75,7 @@ class Sidebar extends StatelessWidget {
           ),
           _item(
             context,
-            icon: Icons.music_note_rounded,
+            icon: Icons.music_note_outlined,
             color: OneDarkPro.blue,
             label: 'Spotify',
             subtitle: 'Downloader activo',
@@ -85,17 +85,17 @@ class Sidebar extends StatelessWidget {
           _disabledItem(
             icon: Icons.play_circle_outline_rounded,
             label: 'YouTube Music',
-            badge: 'Próximamente',
+            badge: 'Pronto',
           ),
           _disabledItem(
             icon: Icons.cloud_outlined,
             label: 'SoundCloud',
-            badge: 'Próximamente',
+            badge: 'Pronto',
           ),
           _disabledItem(
             icon: Icons.album_outlined,
             label: 'Deezer',
-            badge: 'Próximamente',
+            badge: 'Pronto',
           ),
           const Spacer(),
           const Divider(height: 1),

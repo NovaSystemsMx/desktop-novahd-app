@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/download_task.dart';
 import '../services/downloader_service.dart';
 import '../theme/one_dark_pro.dart';
+import 'empty_icon_tile.dart';
 
 /// Panel lateral con la cola de descargas.
 /// Cabecera de una sola fila (misma altura que la tabla de resultados),
@@ -79,6 +80,11 @@ class DownloadQueuePanel extends StatelessWidget {
                               Icons.cleaning_services_rounded,
                               size: 18,
                             ),
+                            // Deshabilitado apenas perceptible en vez de
+                            // invisible: mantiene el patrón sin ruido.
+                            disabledColor: OneDarkPro.fgDim.withValues(
+                              alpha: 0.55,
+                            ),
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(
                               minWidth: 32,
@@ -99,15 +105,15 @@ class DownloadQueuePanel extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             ExcludeSemantics(
-                              child: Icon(
-                                Icons.downloading_rounded,
-                                color: OneDarkPro.fgDim,
-                                size: 30,
+                              child: EmptyIconTile(
+                                icon: Icons.downloading_rounded,
+                                size: 52,
+                                iconSize: 26,
                               ),
                             ),
                             SizedBox(height: 10),
                             Text(
-                              'La cola esta vacia.\nDescarga cualquier resultado y aparecera aqui con su progreso.',
+                              'La cola está vacía.\nDescarga cualquier resultado y aparecerá aquí con su progreso.',
                               textAlign: TextAlign.center,
                               style: AppText.secondary,
                             ),

@@ -87,7 +87,7 @@ class _SpotifyViewState extends State<SpotifyView> {
                   children: [
                     Text('Spotify Downloader', style: AppText.hero),
                     Text(
-                      'MP3 con caratula y etiquetas ID3',
+                      'MP3 con carátula y etiquetas ID3',
                       style: AppText.secondary.copyWith(fontSize: 12),
                     ),
                   ],
@@ -100,15 +100,22 @@ class _SpotifyViewState extends State<SpotifyView> {
           Row(
             children: [
               Expanded(
-                child: TextField(
-                  controller: _controller,
-                  onSubmitted: (_) => _search(),
-                  textInputAction: TextInputAction.search,
-                  style: AppText.input,
-                  decoration: InputDecoration(
-                    hintText: 'Busca canción, artista o álbum…',
-                    hintStyle: AppText.secondary.copyWith(fontSize: 14),
-                    prefixIcon: const Icon(Icons.search_rounded),
+                child: SizedBox(
+                  height: 48,
+                  child: TextField(
+                    controller: _controller,
+                    onSubmitted: (_) => _search(),
+                    textInputAction: TextInputAction.search,
+                    style: AppText.input,
+                    decoration: InputDecoration(
+                      hintText: 'Busca canción, artista o álbum…',
+                      hintStyle: AppText.secondary.copyWith(fontSize: 14),
+                      prefixIcon: const Icon(Icons.search_rounded),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -117,12 +124,12 @@ class _SpotifyViewState extends State<SpotifyView> {
                 height: 48,
                 child: Tooltip(
                   message: 'Buscar (Enter)',
-                  child: ElevatedButton(
+                  child: ElevatedButton.icon(
                     onPressed: _searching ? null : _search,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                     ),
-                    child: _searching
+                    icon: _searching
                         ? Semantics(
                             liveRegion: true,
                             label: 'Buscando',
@@ -136,6 +143,7 @@ class _SpotifyViewState extends State<SpotifyView> {
                             ),
                           )
                         : const Icon(Icons.search_rounded, size: 20),
+                    label: const Text('Buscar', style: TextStyle(fontSize: 13)),
                   ),
                 ),
               ),

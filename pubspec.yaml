@@ -14,6 +14,8 @@ dependencies:
   cached_network_image: ^3.4.1
   file_selector: ^1.0.3
   flutter_secure_storage: ^9.2.2
+  window_manager: ^0.5.2
+  screen_retriever: ^0.2.2
 
 dev_dependencies:
   flutter_test:

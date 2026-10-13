@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../models/track.dart';
 import '../theme/one_dark_pro.dart';
+import 'empty_icon_tile.dart';
 
 /// Tabla de resultados de búsqueda.
 /// La cabecera queda fija arriba; solo las filas hacen scroll.
@@ -46,12 +47,12 @@ class ResultsTable extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ExcludeSemantics(
-                    child: Icon(Icons.search_rounded, color: OneDarkPro.fgDim),
+                    child: EmptyIconTile(icon: Icons.search_rounded),
                   ),
-                  SizedBox(width: 10),
+                  SizedBox(width: 12),
                   Flexible(
                     child: Text(
-                      'Busca una cancion, artista o album para ver resultados.',
+                      'Busca una canción, artista o álbum para ver resultados.',
                       textAlign: TextAlign.center,
                       style: AppText.secondary,
                     ),
@@ -260,6 +261,11 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(text, style: AppText.caps);
+    return Text(
+      text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: AppText.caps,
+    );
   }
 }
