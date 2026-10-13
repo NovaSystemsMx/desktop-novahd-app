@@ -7,12 +7,15 @@ Downloader de escritorio para Windows. Módulo actual: **Spotify**
 ## Qué hace
 
 - Sidebar con plataformas: Spotify activo; YouTube Music, SoundCloud y
-  Deezer como "Próximamente".
+  Deezer como "Pronto".
 - Buscador con tabla de resultados (portada, título/artista, álbum,
   duración, acción con header fijo) y cola de descargas lateral con
   progreso real, iconos con tooltip y ruta destino como pie.
-- Barra de estado persistente: refleja búsquedas, cola y avisos
+- Barra de estado persistente (36px): refleja búsquedas, cola y avisos
   ("Agregado a la cola") sin popups.
+- Ventana con tamaño inicial y mínimo según la escala del display
+  (100/125/150/200%), recortada al área visible y centrada
+  (`window_manager` + `screen_retriever`).
 - Tema One Dark Pro con azul `#5F7EA6` como color primario; verde,
   amarillo y rojo solo para estados de descarga y errores. Rampa de
   texto AA (`fgMid`, variantes `*Text`, botón `#7FA3CC` con texto
@@ -85,8 +88,9 @@ lib/
   widgets/sidebar.dart
   widgets/results_table.dart      # header fijo + scroll + pill "En cola";
                                   # accion solo en boton Descargar (sin clic en fila)
-  widgets/download_queue_panel.dart # cola + CTA en vacio + tooltips
-  widgets/status_bar.dart         # barra de estado + avisos
+  widgets/download_queue_panel.dart # cola de descargas + pie con ruta
+  widgets/empty_icon_tile.dart    # tile azul para estados vacios
+  widgets/status_bar.dart         # barra de estado 36px + avisos
   views/spotify_view.dart
   views/settings_view.dart        # ajustes: auth, consola, configuracion
 tool/
@@ -122,16 +126,14 @@ Escala tipográfica única (`AppText`, misma familia base):
 
 Accesibilidad (desktop): anillo de foco visible por teclado,
 `Semantics` con live regions en errores y progreso, iconos
-decorativos excluidos del árbol, tooltips en icon-only y textos
-truncados. Errores con botón Reintentar y foco automático; estado
-"sin resultados" con sugerencias; layout responsive (cola apilada
-bajo 860px).
+decorativos excluidos del árbol, tooltips en botones icon-only.
+Errores de búsqueda y guardado con botón Reintentar, foco automático
+y mensaje inline persistente; layout responsive (cola apilada bajo
+860px de contenido).
 
 ## Notas
 
 - La cola de descargas vive solo en memoria: al cerrar la app se pierde
   (limitación conocida, sin persistencia en beta).
-- Ventana maximizada con tamaño mínimo requiere plugin + Developer
-  Mode de Windows (pendiente).
 - Selector de carpeta destino pendiente.
 - Ver `CHANGELOG.md` para el historial.

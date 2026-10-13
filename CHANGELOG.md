@@ -9,10 +9,13 @@
   progreso de cola y estados; iconos decorativos excluidos.
 - Errores de búsqueda y guardado de cookies con Reintentar, foco
   automático y mensaje inline persistente.
-- Tabla sin clic en fila (acción solo en Descargar), estado "sin
-  resultados" con sugerencias, labels en campos y tooltips.
-- Cola apilada bajo 860px; targets de icon-only a 32px; rótulo
-  "Limpiar completadas y fallidas".
+- Tabla sin clic en fila (acción solo en Descargar); headers con
+  ellipsis; targets de icon-only a 32px.
+- Botón Buscar con texto a 48px; tiles azules en estados vacíos;
+  badges "Pronto"; status bar 36px con punto-anillo; tildes en copias.
+- Ventana con tamaño inicial y mínimo según escala del display
+  (100/125/150/200%) vía `window_manager` + `screen_retriever`.
+- Cola apilada bajo 860px de contenido en ventanas angostas.
 
 ## v0.7 (en curso) - Autenticacion anti-bot
 
