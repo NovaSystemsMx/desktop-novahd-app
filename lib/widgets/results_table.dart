@@ -228,26 +228,32 @@ class ResultsTable extends StatelessWidget {
                               color: OneDarkPro.blue.withValues(alpha: 0.4),
                             ),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ExcludeSemantics(
-                                child: Icon(
-                                  Icons.check_circle_rounded,
-                                  color: OneDarkPro.blueText,
-                                  size: 16,
+                          child: FittedBox(
+                            // Solo actúa si el contenido excede (escala de
+                            // texto alta del SO): encoge sin cambiar el
+                            // diseño a tamaño normal.
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ExcludeSemantics(
+                                  child: Icon(
+                                    Icons.check_circle_rounded,
+                                    color: OneDarkPro.blueText,
+                                    size: 16,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(width: 6),
-                              Text(
-                                'En cola',
-                                style: AppText.body.copyWith(
-                                  color: OneDarkPro.blueText,
-                                  fontWeight: FontWeight.w600,
+                                SizedBox(width: 6),
+                                Text(
+                                  'En cola',
+                                  style: AppText.body.copyWith(
+                                    color: OneDarkPro.blueText,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         )
                       : SizedBox(
