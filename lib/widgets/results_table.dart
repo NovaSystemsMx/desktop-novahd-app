@@ -12,11 +12,18 @@ class ResultsTable extends StatelessWidget {
   final Set<String> queuedIds;
   final ValueChanged<Track> onDownload;
 
+  /// Distingue "aún no buscado" de "0 resultados": el segundo muestra
+  /// sugerencias en vez del mensaje inicial.
+  final bool searched;
+  final String lastQuery;
+
   const ResultsTable({
     super.key,
     required this.tracks,
     required this.queuedIds,
     required this.onDownload,
+    this.searched = false,
+    this.lastQuery = '',
   });
 
   @override
@@ -35,27 +42,57 @@ class ResultsTable extends StatelessWidget {
   }
 
   Widget _emptyBody() {
+    final noResults = searched;
     return Column(
       children: [
         _tableHeader(),
-        const Expanded(
+        Expanded(
           child: Center(
             child: Padding(
-              padding: EdgeInsets.all(28),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  ExcludeSemantics(
-                    child: Icon(Icons.search_rounded, color: OneDarkPro.fgDim),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ExcludeSemantics(
+                        child: Icon(
+                          noResults
+                              ? Icons.search_off_rounded
+                              : Icons.search_rounded,
+                          color: OneDarkPro.fgDim,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Text(
+                          noResults && lastQuery.isNotEmpty
+                              ? 'Sin resultados para "$lastQuery".'
+                              : noResults
+                              ? 'Sin resultados para esa búsqueda.'
+                              : 'Busca una cancion, artista o album para ver resultados.',
+                          textAlign: TextAlign.center,
+                          style: AppText.secondary,
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 10),
-                  Flexible(
-                    child: Text(
-                      'Busca una cancion, artista o album para ver resultados.',
+                  if (noResults) ...[
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Prueba con artista + título, revisa la ortografía o usa menos palabras.',
                       textAlign: TextAlign.center,
                       style: AppText.secondary,
                     ),
-                  ),
+                  ] else ...[
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Ej.: "Bohemian Rhapsody Queen" o "Abbey Road Beatles".',
+                      textAlign: TextAlign.center,
+                      style: AppText.secondary,
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -159,11 +196,14 @@ class ResultsTable extends StatelessWidget {
               ),
               Expanded(
                 flex: 3,
-                child: Text(
-                  t.album,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppText.body.copyWith(fontSize: 12.5),
+                child: Tooltip(
+                  message: t.album,
+                  child: Text(
+                    t.album,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.body.copyWith(fontSize: 12.5),
+                  ),
                 ),
               ),
               SizedBox(

@@ -22,6 +22,7 @@ class _SpotifyViewState extends State<SpotifyView> {
   final _errorFocus = FocusNode();
   List<Track> _results = [];
   bool _searching = false;
+  bool _searched = false;
   String? _error;
 
   @override
@@ -46,6 +47,7 @@ class _SpotifyViewState extends State<SpotifyView> {
       setState(() {
         _results = tracks;
         _searching = false;
+        _searched = true;
       });
     } catch (e) {
       if (!mounted) return;
@@ -106,6 +108,7 @@ class _SpotifyViewState extends State<SpotifyView> {
                   textInputAction: TextInputAction.search,
                   style: AppText.input,
                   decoration: InputDecoration(
+                    labelText: 'Buscar en Spotify',
                     hintText: 'Busca canción, artista o álbum…',
                     hintStyle: AppText.secondary.copyWith(fontSize: 14),
                     prefixIcon: const Icon(Icons.search_rounded),
@@ -205,14 +208,20 @@ class _SpotifyViewState extends State<SpotifyView> {
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
+                final searched = _searched;
+                final query = _controller.text.trim();
                 final results = Selector<DownloaderService, String>(
-                  selector: (_, dl) => dl.queueFingerprint,
+                  // La huella incluye el flag local para repintar el
+                  // estado vacío tras buscar (no solo con la cola).
+                  selector: (_, dl) => '${dl.queueFingerprint}|$searched',
                   builder: (context, _, _) => ResultsTable(
                     tracks: _results,
                     queuedIds: context.read<DownloaderService>().queuedIds,
                     onDownload: (track) {
                       context.read<DownloaderService>().enqueue(track);
                     },
+                    searched: searched,
+                    lastQuery: query,
                   ),
                 );
                 const queue = SizedBox(width: 360, child: DownloadQueuePanel());

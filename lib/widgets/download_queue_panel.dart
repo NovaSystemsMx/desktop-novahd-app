@@ -72,7 +72,7 @@ class DownloadQueuePanel extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Tooltip(
-                          message: 'Limpiar terminadas',
+                          message: 'Limpiar completadas y fallidas',
                           child: IconButton(
                             onPressed: q.isEmpty ? null : dl.clearFinished,
                             icon: const Icon(
@@ -91,25 +91,37 @@ class DownloadQueuePanel extends StatelessWidget {
                   ),
                 ),
                 if (q.isEmpty)
-                  const Expanded(
+                  Expanded(
                     child: Center(
                       child: Padding(
-                        padding: EdgeInsets.all(24),
+                        padding: const EdgeInsets.all(24),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            ExcludeSemantics(
+                            const ExcludeSemantics(
                               child: Icon(
                                 Icons.downloading_rounded,
                                 color: OneDarkPro.fgDim,
                                 size: 30,
                               ),
                             ),
-                            SizedBox(height: 10),
-                            Text(
+                            const SizedBox(height: 10),
+                            const Text(
                               'La cola esta vacia.\nDescarga cualquier resultado y aparecera aqui con su progreso.',
                               textAlign: TextAlign.center,
                               style: AppText.secondary,
+                            ),
+                            const SizedBox(height: 12),
+                            OutlinedButton.icon(
+                              onPressed: dl.openDownloadsFolder,
+                              icon: const Icon(
+                                Icons.folder_open_rounded,
+                                size: 16,
+                              ),
+                              label: const Text(
+                                'Abrir descargas',
+                                style: TextStyle(fontSize: 12),
+                              ),
                             ),
                           ],
                         ),
@@ -218,11 +230,14 @@ class _QueueTile extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  task.message,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppText.secondary.copyWith(fontSize: 11.5),
+                Tooltip(
+                  message: task.message,
+                  child: Text(
+                    task.message,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.secondary.copyWith(fontSize: 11.5),
+                  ),
                 ),
               ],
             ),

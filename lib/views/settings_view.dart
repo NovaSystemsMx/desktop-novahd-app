@@ -317,13 +317,19 @@ class _SettingsViewState extends State<SettingsView> {
                     'Paso 2: abre YouTube con tu sesion iniciada, copia las cookies y pegalas abajo.',
                     style: TextStyle(color: OneDarkPro.fg, fontSize: 12.5),
                   ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Paso 3: tras iniciar sesión en el navegador, exporta con la extensión y usa Guardar cookies.',
+                    style: TextStyle(color: OneDarkPro.fg, fontSize: 12.5),
+                  ),
                   const SizedBox(height: 10),
                   TextField(
                     controller: _cookiesCtrl,
                     maxLines: 4,
                     minLines: 3,
                     decoration: const InputDecoration(
-                      hintText: 'Pega aquí las cookies (formato Netscape, ej. de GET COOKIES LOCALLY)...',
+                      labelText: 'Cookies (formato Netscape)',
+                      hintText: 'Pega aquí las cookies, ej. de GET COOKIES LOCALLY...',
                     ),
                   ),
                   const SizedBox(height: 8),
