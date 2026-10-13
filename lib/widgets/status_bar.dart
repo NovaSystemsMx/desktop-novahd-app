@@ -62,7 +62,7 @@ class StatusBar extends StatelessWidget {
         }
 
         return Container(
-          height: 30,
+          height: 36,
           decoration: const BoxDecoration(
             color: OneDarkPro.sidebar,
             border: Border(top: BorderSide(color: OneDarkPro.border)),
@@ -70,18 +70,37 @@ class StatusBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
-              Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+              ExcludeSemantics(
+                child: Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: dot.withValues(alpha: 0.45),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Center(
+                    child: Container(
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: dot,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Expanded(
-                child: Text(text,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppText.secondary
-                        .copyWith(fontSize: 12)),
+                child: Text(
+                  text,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.secondary.copyWith(fontSize: 12),
+                ),
               ),
             ],
           ),

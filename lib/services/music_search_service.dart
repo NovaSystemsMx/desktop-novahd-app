@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import '../config/app_config.dart';
 import '../models/track.dart';
+import 'app_log.dart';
 import 'binaries.dart';
 import 'ytmusic_service.dart';
 
@@ -53,8 +54,8 @@ class MusicSearchService extends ChangeNotifier {
     try {
       final songs = await YouTubeMusicService().searchSongs(q);
       if (songs.isNotEmpty) return songs;
-    } catch (_) {
-      // Cae al fallback de yt-dlp.
+    } catch (e) {
+      AppLog.instance.info('Busqueda', 'YTM fallo, usando reserva: $e');
     }
     final flat = await youtubeSearch(q);
     return YouTubeMusicService().enrichTracks(flat);

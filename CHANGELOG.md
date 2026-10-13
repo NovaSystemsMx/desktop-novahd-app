@@ -1,3 +1,30 @@
+# CHANGELOG - Nova Hub Downloader
+
+## (en curso) — Accesibilidad y contraste UI
+
+- Rampa de texto AA: `fgMid` para secundarios/caps y variantes
+  `greenText`/`blueText`/`redText`; botón primario `#7FA3CC`
+  con texto oscuro (6.4:1).
+- Foco visible por teclado + `Semantics`/live regions en errores,
+  progreso de cola y estados; iconos decorativos excluidos.
+- Errores de búsqueda y guardado de cookies con Reintentar, foco
+  automático y mensaje inline persistente.
+- Tabla sin clic en fila (acción solo en Descargar); headers con
+  ellipsis; targets de icon-only a 32px.
+- Botón Buscar con texto a 48px; tiles azules en estados vacíos;
+  badges "Pronto"; status bar 36px con punto-anillo; tildes en copias.
+- Ventana con tamaño inicial y mínimo según escala del display
+  (100/125/150/200%) vía `window_manager` + `screen_retriever`.
+- Cola apilada bajo 860px de contenido en ventanas angostas.
+
+## v0.7 (en curso) - Autenticacion anti-bot
+
+- Ajustes con login de YouTube, pegado de cookies (solo necesarias,
+  cifradas) y verificacion de vigencia con indicador.
+- Cadena por descarga: guardadas -> plano, con ultimo uso visible.
+- Consola de sesion con exportar a novahd-YYYYMMDD.log.
+- Requiere Developer Mode (plugins nativos).
+
 ## v0.6 (en curso) — Arquitectura limpia
 
 - `YtDlpEngine` extraído: motor yt-dlp reutilizable sin UI.

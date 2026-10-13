@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/download_task.dart';
 import '../services/downloader_service.dart';
 import '../theme/one_dark_pro.dart';
+import 'empty_icon_tile.dart';
 
 /// Panel lateral con la cola de descargas.
 /// Cabecera de una sola fila (misma altura que la tabla de resultados),
@@ -28,12 +29,12 @@ class DownloadQueuePanel extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Container(
-                  padding:
-                      const EdgeInsets.fromLTRB(16, 8, 8, 8),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
                   decoration: const BoxDecoration(
                     color: OneDarkPro.darker,
                     border: Border(
-                        bottom: BorderSide(color: OneDarkPro.border)),
+                      bottom: BorderSide(color: OneDarkPro.border),
+                    ),
                   ),
                   child: SizedBox(
                     height: 24,
@@ -48,15 +49,9 @@ class DownloadQueuePanel extends StatelessWidget {
                                 style: AppText.caps,
                               ),
                               const SizedBox(width: 10),
-                              const Text(
-                                '•',
-                                style: AppText.caps,
-                              ),
+                              const Text('•', style: AppText.caps),
                               const SizedBox(width: 10),
-                              Text(
-                                q.length.toString(),
-                                style: AppText.caps,
-                              ),
+                              Text(q.length.toString(), style: AppText.caps),
                             ],
                           ),
                         ),
@@ -64,26 +59,37 @@ class DownloadQueuePanel extends StatelessWidget {
                           message: 'Abrir carpeta de descargas',
                           child: IconButton(
                             onPressed: dl.openDownloadsFolder,
-                            icon: const Icon(Icons.folder_open_rounded,
-                                size: 16),
-                            color: OneDarkPro.blue,
+                            icon: const Icon(
+                              Icons.folder_open_rounded,
+                              size: 18,
+                            ),
+                            color: OneDarkPro.blueText,
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(
-                                minWidth: 24, minHeight: 24),
+                              minWidth: 32,
+                              minHeight: 32,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 4),
                         Tooltip(
                           message: 'Limpiar terminadas',
                           child: IconButton(
-                            onPressed:
-                                q.isEmpty ? null : dl.clearFinished,
+                            onPressed: q.isEmpty ? null : dl.clearFinished,
                             icon: const Icon(
-                                Icons.cleaning_services_rounded,
-                                size: 16),
+                              Icons.cleaning_services_rounded,
+                              size: 18,
+                            ),
+                            // Deshabilitado apenas perceptible en vez de
+                            // invisible: mantiene el patrón sin ruido.
+                            disabledColor: OneDarkPro.fgDim.withValues(
+                              alpha: 0.55,
+                            ),
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(
-                                minWidth: 24, minHeight: 24),
+                              minWidth: 32,
+                              minHeight: 32,
+                            ),
                           ),
                         ),
                       ],
@@ -98,11 +104,16 @@ class DownloadQueuePanel extends StatelessWidget {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.downloading_rounded,
-                                color: OneDarkPro.fgDim, size: 30),
+                            ExcludeSemantics(
+                              child: EmptyIconTile(
+                                icon: Icons.downloading_rounded,
+                                size: 52,
+                                iconSize: 26,
+                              ),
+                            ),
                             SizedBox(height: 10),
                             Text(
-                              'La cola esta vacia.\nDescarga cualquier resultado y aparecera aqui con su progreso.',
+                              'La cola está vacía.\nDescarga cualquier resultado y aparecerá aquí con su progreso.',
                               textAlign: TextAlign.center,
                               style: AppText.secondary,
                             ),
@@ -116,27 +127,24 @@ class DownloadQueuePanel extends StatelessWidget {
                     child: ListView.separated(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       itemCount: q.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: 8),
+                      separatorBuilder: (_, _) => const SizedBox(height: 8),
                       itemBuilder: (context, i) => Padding(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 16),
+                        key: ValueKey(q[i].id),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: _QueueTile(task: q[i]),
                       ),
                     ),
                   ),
                 const Divider(height: 1),
                 Padding(
-                  padding:
-                      const EdgeInsets.fromLTRB(16, 6, 16, 8),
+                  padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
                   child: Tooltip(
                     message: dl.downloadDir.path,
                     child: Text(
                       dl.downloadDir.path,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style:
-                          AppText.secondary.copyWith(fontSize: 11),
+                      style: AppText.secondary.copyWith(fontSize: 11),
                     ),
                   ),
                 ),
@@ -164,15 +172,15 @@ class _QueueTile extends StatelessWidget {
         statusIcon = Icons.schedule_rounded;
         break;
       case DownloadStatus.downloading:
-        statusColor = OneDarkPro.blue;
+        statusColor = OneDarkPro.blueText;
         statusIcon = Icons.downloading_rounded;
         break;
       case DownloadStatus.completed:
-        statusColor = OneDarkPro.green;
+        statusColor = OneDarkPro.greenText;
         statusIcon = Icons.check_circle_rounded;
         break;
       case DownloadStatus.failed:
-        statusColor = OneDarkPro.red;
+        statusColor = OneDarkPro.redText;
         statusIcon = Icons.error_outline_rounded;
         break;
     }
@@ -186,17 +194,20 @@ class _QueueTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(statusIcon, color: statusColor, size: 18),
+          ExcludeSemantics(
+            child: Icon(statusIcon, color: statusColor, size: 18),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${task.track.artistsLabel} - ${task.track.title}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style:
-                        AppText.title.copyWith(fontSize: 12.5)),
+                Text(
+                  '${task.track.artistsLabel} - ${task.track.title}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.title.copyWith(fontSize: 12.5),
+                ),
                 const SizedBox(height: 4),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(6),
@@ -206,16 +217,19 @@ class _QueueTile extends StatelessWidget {
                         : task.progress.clamp(0, 1),
                     minHeight: 6,
                     backgroundColor: OneDarkPro.border,
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(statusColor),
+                    valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                    semanticsLabel: '${task.track.title}: ${task.message}',
+                    semanticsValue:
+                        '${(task.progress.clamp(0, 1) * 100).round()} por ciento',
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(task.message,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppText.secondary
-                        .copyWith(fontSize: 11.5)),
+                Text(
+                  task.message,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.secondary.copyWith(fontSize: 11.5),
+                ),
               ],
             ),
           ),
@@ -225,22 +239,26 @@ class _QueueTile extends StatelessWidget {
               message: 'Reintentar',
               child: IconButton(
                 onPressed: () => dl.retry(task),
-                icon: const Icon(Icons.refresh_rounded,
-                    color: OneDarkPro.yellow, size: 18),
+                icon: const Icon(
+                  Icons.refresh_rounded,
+                  color: OneDarkPro.yellow,
+                  size: 18,
+                ),
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(
-                    minWidth: 28, minHeight: 28),
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
               ),
             ),
           Tooltip(
             message: 'Quitar de la cola',
             child: IconButton(
               onPressed: () => dl.remove(task.id),
-              icon: const Icon(Icons.close_rounded,
-                  color: OneDarkPro.fgDim, size: 18),
+              icon: const Icon(
+                Icons.close_rounded,
+                color: OneDarkPro.fgDim,
+                size: 18,
+              ),
               padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(
-                  minWidth: 28, minHeight: 28),
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             ),
           ),
         ],

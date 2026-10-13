@@ -7,7 +7,9 @@ import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/download_task.dart';
 import '../models/track.dart';
+import 'app_log.dart';
 import 'audio_tagger.dart';
+import 'auth_store.dart';
 import 'binaries.dart';
 import 'yt_dlp_engine.dart';
 import 'ytmusic_service.dart';
@@ -27,6 +29,12 @@ class DownloaderService extends ChangeNotifier {
   /// Motor de procesos reutilizable (audio, JSON, futuros módulos).
   final YtDlpEngine engine = YtDlpEngine();
 
+  /// Última autenticación usada (para el indicador de Ajustes).
+  String lastAuthLabel = 'Sin auth';
+  bool lastAuthOk = false;
+
+  /// Índice de la opción de auth que funcionó (fija la que sirve).
+
   final List<DownloadTask> _queue = [];
   bool _working = false;
 
@@ -39,9 +47,11 @@ class DownloaderService extends ChangeNotifier {
 
   /// Ids en cola o descargando (para marcar filas ya agregadas).
   Set<String> get queuedIds => _queue
-      .where((t) =>
-          t.status == DownloadStatus.queued ||
-          t.status == DownloadStatus.downloading)
+      .where(
+        (t) =>
+            t.status == DownloadStatus.queued ||
+            t.status == DownloadStatus.downloading,
+      )
       .map((t) => t.track.id)
       .toSet();
 
@@ -60,14 +70,15 @@ class DownloaderService extends ChangeNotifier {
   }
 
   int get pendingCount => _queue
-      .where((t) =>
-          t.status == DownloadStatus.queued ||
-          t.status == DownloadStatus.downloading)
+      .where(
+        (t) =>
+            t.status == DownloadStatus.queued ||
+            t.status == DownloadStatus.downloading,
+      )
       .length;
 
-  int get downloadingCount => _queue
-      .where((t) => t.status == DownloadStatus.downloading)
-      .length;
+  int get downloadingCount =>
+      _queue.where((t) => t.status == DownloadStatus.downloading).length;
 
   int get queuedCount =>
       _queue.where((t) => t.status == DownloadStatus.queued).length;
@@ -89,24 +100,29 @@ class DownloaderService extends ChangeNotifier {
 
   void enqueue(Track track) {
     // Evita duplicados exactos en cola/activos.
-    final exists = _queue.any((t) =>
-        t.track.id == track.id &&
-        (t.status == DownloadStatus.queued ||
-            t.status == DownloadStatus.downloading));
+    final exists = _queue.any(
+      (t) =>
+          t.track.id == track.id &&
+          (t.status == DownloadStatus.queued ||
+              t.status == DownloadStatus.downloading),
+    );
     if (exists) return;
-    _queue.insert(0, DownloadTask(
-      id: '${track.id}_${DateTime.now().microsecondsSinceEpoch}',
-      track: track,
-    ));
-    _setNotice(
-        'Agregado a la cola: ${track.artistsLabel} - ${track.title}');
+    _queue.insert(
+      0,
+      DownloadTask(
+        id: '${track.id}_${DateTime.now().microsecondsSinceEpoch}',
+        track: track,
+      ),
+    );
+    _setNotice('Agregado a la cola: ${track.artistsLabel} - ${track.title}');
     notifyListeners();
     _processQueue();
   }
 
   void remove(String taskId) {
-    final wasActive = _queue.any((t) =>
-        t.id == taskId && t.status == DownloadStatus.downloading);
+    final wasActive = _queue.any(
+      (t) => t.id == taskId && t.status == DownloadStatus.downloading,
+    );
     _queue.removeWhere((t) => t.id == taskId);
     if (wasActive) {
       engine.killActive();
@@ -116,9 +132,11 @@ class DownloaderService extends ChangeNotifier {
   }
 
   void clearFinished() {
-    _queue.removeWhere((t) =>
-        t.status == DownloadStatus.completed ||
-        t.status == DownloadStatus.failed);
+    _queue.removeWhere(
+      (t) =>
+          t.status == DownloadStatus.completed ||
+          t.status == DownloadStatus.failed,
+    );
     notifyListeners();
   }
 
@@ -181,18 +199,19 @@ class DownloaderService extends ChangeNotifier {
       try {
         await _downloadWithYtDlp(task);
         return;
-      } catch (_) {
+      } catch (e) {
         if (!_queue.any((t) => t.id == task.id)) return;
         if (task.attempts >= AppConfig.maxAttempts) {
           task.status = DownloadStatus.failed;
           task.progress = 0;
           task.message =
               'No se pudo descargar tras ${AppConfig.maxAttempts} intentos. Revisa tu conexión.';
+          AppLog.instance.error('Descarga', '${task.track.safeFileName}: $e');
           notifyListeners();
           return;
         }
-        final wait = backoffs[(task.attempts - 1)
-            .clamp(0, backoffs.length - 1)];
+        final wait =
+            backoffs[(task.attempts - 1).clamp(0, backoffs.length - 1)];
         task.message =
             'Reintentando en ${wait.inSeconds}s (intento ${task.attempts + 1}/${AppConfig.maxAttempts})...';
         notifyListeners();
@@ -206,7 +225,8 @@ class DownloaderService extends ChangeNotifier {
   void _missingEngine(DownloadTask task) {
     task.status = DownloadStatus.failed;
     task.progress = 0;
-    task.message = 'No se encontro yt-dlp en el equipo. Reinstalalo y reintenta.';
+    task.message =
+        'No se encontro yt-dlp en el equipo. Reinstalalo y reintenta.';
     notifyListeners();
   }
 
@@ -229,32 +249,61 @@ class DownloaderService extends ChangeNotifier {
     final before = await YtDlpEngine.snapshotMp3Paths(dir);
     final beforeAll = await YtDlpEngine.snapshotAllPaths(dir);
 
-    Future<int> attempt(List<String> extraArgs) =>
-        engine.downloadAudio(
+    // Auth por intento: guardadas (si hay) y luego plano.
+    // Las guardadas se materializan a un temporal que se borra al final.
+    final auth = AuthStore.instance;
+    File? cookieFile;
+    try {
+      if (auth.hasStoredCookies) {
+        cookieFile = await auth.materializeCookieFile();
+      }
+      final useStored = cookieFile != null;
+
+      Future<int> attempt(List<String> baseArgs, {required bool stored}) async {
+        lastAuthLabel = stored ? 'Guardadas' : 'Sin auth';
+        notifyListeners();
+        final exit = await engine.downloadAudio(
           source: source,
           outputTemplate: outTemplate,
           audioQuality: AppConfig.audioQuality,
-          extraArgs: extraArgs,
+          extraArgs: [
+            ...baseArgs,
+            if (stored) ...['--cookiefile', cookieFile!.path],
+          ],
           onProgress: (p) {
             task.progress = p;
-            task.message =
-                'Descargando... ${(p * 100).toStringAsFixed(0)}%';
+            task.message = 'Descargando... ${(p * 100).toStringAsFixed(0)}%';
             notifyListeners();
           },
         );
+        lastAuthOk = exit == 0;
+        return exit;
+      }
 
-    var exit = await attempt(const []);
-    if (exit != 0) {
-      // YouTube a veces responde 403 al cliente web: reintento con el
-      // cliente android antes de dar la descarga por fallida.
-      task.message = 'Reintentando con cliente alternativo…';
-      task.progress = 0;
-      notifyListeners();
-      exit = await attempt(
-          ['--extractor-args', 'youtube:player_client=android']);
-    }
-    if (exit != 0) {
-      throw Exception('yt-dlp salió con código $exit');
+      var exit = await attempt(const [], stored: useStored);
+      if (exit != 0 && useStored) {
+        // Contingencia: una vez sin auth.
+        task.message = 'Reintentando sin auth...';
+        task.progress = 0;
+        notifyListeners();
+        exit = await attempt(const [], stored: false);
+      }
+      if (exit != 0) {
+        // YouTube a veces responde 403 al cliente web: reintento con el
+        // cliente android antes de dar la descarga por fallida.
+        task.message = 'Reintentando con cliente alternativo...';
+        task.progress = 0;
+        notifyListeners();
+        exit = await attempt([
+          '--extractor-args',
+          'youtube:player_client=android',
+        ], stored: useStored);
+      }
+      if (exit != 0) {
+        throw Exception('yt-dlp fallo, codigo $exit');
+      }
+    } finally {
+      await auth.discardCookieFile(cookieFile);
     }
 
     // Si se canceló mientras descargaba/convertía, no tocar nada más:
@@ -270,8 +319,9 @@ class DownloaderService extends ChangeNotifier {
 
     // 2) Renombra al formato "Artista - Título.mp3".
     final finalPath = '${dir.path}\\${task.track.safeFileName}.mp3';
-    final finalFile =
-        mp3.path == finalPath ? mp3 : await _safeRename(mp3, finalPath);
+    final finalFile = mp3.path == finalPath
+        ? mp3
+        : await _safeRename(mp3, finalPath);
 
     // 3) Etiquetado ID3 (como mutagen): título, artista, álbum + carátula HD.
     task.message = 'Etiquetando MP3…';
@@ -289,8 +339,7 @@ class DownloaderService extends ChangeNotifier {
     var target = File(destPath);
     var n = 1;
     while (await target.exists()) {
-      final withoutExt =
-          destPath.substring(0, destPath.length - 4);
+      final withoutExt = destPath.substring(0, destPath.length - 4);
       target = File('$withoutExt ($n).mp3');
       n++;
     }
@@ -311,10 +360,10 @@ class DownloaderService extends ChangeNotifier {
     var playerCover = '';
     if (videoId.isNotEmpty) {
       try {
-        final details =
-            await YouTubeMusicService().fetchVideoDetails(videoId);
+        final details = await YouTubeMusicService().fetchVideoDetails(videoId);
         playerCover = details.cover;
-      } catch (_) {
+      } catch (e) {
+        AppLog.instance.warning('Etiquetado', 'Sin carátula HD: $e');
         // Se sigue con las carátulas del resultado de búsqueda.
       }
     }
@@ -337,7 +386,8 @@ class DownloaderService extends ChangeNotifier {
           coverBytes: cover,
         );
         return;
-      } catch (_) {
+      } catch (e) {
+        AppLog.instance.warning('Etiquetado', 'Fallo el tag propio: $e');
         // Reserva con ffmpeg solo para la carátula.
       }
     } else {
@@ -372,7 +422,9 @@ class DownloaderService extends ChangeNotifier {
   /// Reserva: incrusta la mejor carátula de [candidates] con ffmpeg.
   /// Si ffmpeg no existe, el MP3 queda con audio válido y sin carátula.
   Future<void> _embedCoverWithFfmpeg(
-      String mp3Path, List<String> candidates) async {
+    String mp3Path,
+    List<String> candidates,
+  ) async {
     if (candidates.every((u) => u.isEmpty)) return;
     File? cover;
     try {
@@ -392,29 +444,38 @@ class DownloaderService extends ChangeNotifier {
       await cover.writeAsBytes(res.bodyBytes);
       final ffmpeg = await Binaries.ffmpeg();
       if (ffmpeg == null) return; // deja la miniatura de yt-dlp
-      final r = await Process.run(ffmpeg, ['-version']).timeout(
-        AppConfig.ffmpegCheckTimeout,
-      );
+      final r = await Process.run(ffmpeg, [
+        '-version',
+      ]).timeout(AppConfig.ffmpegCheckTimeout);
       if (r.exitCode != 0) return;
       final tmp = '$mp3Path.tmp.mp3';
       final emb = await Process.run(ffmpeg, [
         '-y',
-        '-i', mp3Path,
-        '-i', cover.path,
-        '-map', '0:a',
-        '-map', '1:v',
-        '-c:a', 'copy',
-        '-c:v', 'mjpeg',
-        '-id3v2_version', '3',
-        '-metadata:s:v', 'title=Album cover',
-        '-metadata:s:v', 'comment=Cover (front)',
+        '-i',
+        mp3Path,
+        '-i',
+        cover.path,
+        '-map',
+        '0:a',
+        '-map',
+        '1:v',
+        '-c:a',
+        'copy',
+        '-c:v',
+        'mjpeg',
+        '-id3v2_version',
+        '3',
+        '-metadata:s:v',
+        'title=Album cover',
+        '-metadata:s:v',
+        'comment=Cover (front)',
         tmp,
       ]);
       if (emb.exitCode == 0) {
         await File(tmp).rename(mp3Path);
       }
-    } catch (_) {
-      // No bloquea la descarga si falla la carátula.
+    } catch (e) {
+      AppLog.instance.warning('Reserva ffmpeg', e);
     } finally {
       try {
         if (cover != null && await cover.exists()) {

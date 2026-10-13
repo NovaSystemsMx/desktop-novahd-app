@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/one_dark_pro.dart';
+import '../views/settings_view.dart';
 import '../views/spotify_view.dart';
 import '../widgets/sidebar.dart';
 import '../widgets/status_bar.dart';
@@ -22,10 +23,7 @@ class _NovadhAppShellState extends State<NovadhAppShell> {
       backgroundColor: OneDarkPro.background,
       body: Row(
         children: [
-          Sidebar(
-            selected: _tab,
-            onSelect: (t) => setState(() => _tab = t),
-          ),
+          Sidebar(selected: _tab, onSelect: (t) => setState(() => _tab = t)),
           Expanded(
             child: Column(
               children: [
@@ -35,22 +33,32 @@ class _NovadhAppShellState extends State<NovadhAppShell> {
                   decoration: const BoxDecoration(
                     color: OneDarkPro.sidebar,
                     border: Border(
-                        bottom: BorderSide(color: OneDarkPro.border)),
+                      bottom: BorderSide(color: OneDarkPro.border),
+                    ),
                   ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     children: [
-                      Icon(Icons.download_rounded,
-                          size: 14, color: OneDarkPro.blue),
+                      ExcludeSemantics(
+                        child: Icon(
+                          Icons.download_rounded,
+                          size: 14,
+                          color: OneDarkPro.blue,
+                        ),
+                      ),
                       SizedBox(width: 8),
-                      Text('Nova Hub Downloader - Windows v0.5',
-                          style: AppText.secondary
-                              .copyWith(fontSize: 12)),
+                      Text(
+                        'Nova Hub Downloader - Windows v0.5',
+                        style: AppText.secondary.copyWith(fontSize: 12),
+                      ),
                     ],
                   ),
                 ),
-                const Expanded(child: SpotifyView()),
+                Expanded(
+                  child: _tab == PlatformTab.settings
+                      ? const SettingsView()
+                      : const SpotifyView(),
+                ),
                 const StatusBar(),
               ],
             ),

@@ -19,6 +19,7 @@ class SpotifyView extends StatefulWidget {
 
 class _SpotifyViewState extends State<SpotifyView> {
   final _controller = TextEditingController();
+  final _errorFocus = FocusNode();
   List<Track> _results = [];
   bool _searching = false;
   String? _error;
@@ -26,6 +27,7 @@ class _SpotifyViewState extends State<SpotifyView> {
   @override
   void dispose() {
     _controller.dispose();
+    _errorFocus.dispose();
     super.dispose();
   }
 
@@ -51,6 +53,10 @@ class _SpotifyViewState extends State<SpotifyView> {
         _error = e.toString().replaceFirst('Exception: ', '');
         _searching = false;
       });
+      // Lleva el foco al error para que el teclado/lector lo encuentren.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _errorFocus.requestFocus();
+      });
     }
   }
 
@@ -70,19 +76,20 @@ class _SpotifyViewState extends State<SpotifyView> {
                   color: OneDarkPro.blue.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.music_note_rounded,
-                    color: OneDarkPro.blue),
+                child: const ExcludeSemantics(
+                  child: Icon(Icons.music_note_rounded, color: OneDarkPro.blue),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Spotify Downloader',
-                        style: AppText.hero),
-                    Text('MP3 con caratula y etiquetas ID3',
-                        style: AppText.secondary
-                            .copyWith(fontSize: 12)),
+                    Text('Spotify Downloader', style: AppText.hero),
+                    Text(
+                      'MP3 con carátula y etiquetas ID3',
+                      style: AppText.secondary.copyWith(fontSize: 12),
+                    ),
                   ],
                 ),
               ),
@@ -93,15 +100,22 @@ class _SpotifyViewState extends State<SpotifyView> {
           Row(
             children: [
               Expanded(
-                child: TextField(
-                  controller: _controller,
-                  onSubmitted: (_) => _search(),
-                  textInputAction: TextInputAction.search,
-                  style: AppText.input,
-                  decoration: InputDecoration(
-                    hintText: 'Busca canción, artista o álbum…',
-                    hintStyle: AppText.secondary.copyWith(fontSize: 14),
-                    prefixIcon: const Icon(Icons.search_rounded),
+                child: SizedBox(
+                  height: 48,
+                  child: TextField(
+                    controller: _controller,
+                    onSubmitted: (_) => _search(),
+                    textInputAction: TextInputAction.search,
+                    style: AppText.input,
+                    decoration: InputDecoration(
+                      hintText: 'Busca canción, artista o álbum…',
+                      hintStyle: AppText.secondary.copyWith(fontSize: 14),
+                      prefixIcon: const Icon(Icons.search_rounded),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -110,19 +124,26 @@ class _SpotifyViewState extends State<SpotifyView> {
                 height: 48,
                 child: Tooltip(
                   message: 'Buscar (Enter)',
-                  child: ElevatedButton(
+                  child: ElevatedButton.icon(
                     onPressed: _searching ? null : _search,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                     ),
-                    child: _searching
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
+                    icon: _searching
+                        ? Semantics(
+                            liveRegion: true,
+                            label: 'Buscando',
+                            child: const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: OneDarkPro.darker))
+                                color: OneDarkPro.white,
+                              ),
+                            ),
+                          )
                         : const Icon(Icons.search_rounded, size: 20),
+                    label: const Text('Buscar', style: TextStyle(fontSize: 13)),
                   ),
                 ),
               ),
@@ -130,56 +151,100 @@ class _SpotifyViewState extends State<SpotifyView> {
           ),
           const SizedBox(height: 16),
           if (_error != null)
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: OneDarkPro.red.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                    color: OneDarkPro.red.withValues(alpha: 0.4)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.error_outline_rounded,
-                      color: OneDarkPro.red, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(_error!,
-                        style: AppText.body.copyWith(
-                            color: OneDarkPro.red,
-                            fontSize: 12.5)),
-                  ),
-                ],
+            Focus(
+              focusNode: _errorFocus,
+              child: Builder(
+                builder: (context) {
+                  final hasFocus = Focus.of(context).hasFocus;
+                  return Semantics(
+                    container: true,
+                    liveRegion: true,
+                    label: 'Error de búsqueda: $_error',
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: OneDarkPro.red.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: hasFocus
+                              ? OneDarkPro.blueText
+                              : OneDarkPro.red.withValues(alpha: 0.4),
+                          width: hasFocus ? 2 : 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const ExcludeSemantics(
+                            child: Icon(
+                              Icons.error_outline_rounded,
+                              color: OneDarkPro.redText,
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _error!,
+                              style: AppText.body.copyWith(
+                                color: OneDarkPro.redText,
+                                fontSize: 12.5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          TextButton.icon(
+                            onPressed: _searching ? null : _search,
+                            icon: const Icon(Icons.refresh_rounded, size: 16),
+                            label: const Text(
+                              'Reintentar',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           if (_error != null) const SizedBox(height: 12),
           // Resultados a la izquierda, cola a la derecha.
+          // En ventanas estrechas se apilan para no comprimir la tabla.
           Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  // Solo se reconstruye si cambia la membresía de la cola
-                  // (huella de ids+estados), no con cada tick de progreso.
-                  child: Selector<DownloaderService, String>(
-                    selector: (_, dl) => dl.queueFingerprint,
-                    builder: (context, _, _) => ResultsTable(
-                      tracks: _results,
-                      queuedIds: context
-                          .read<DownloaderService>()
-                          .queuedIds,
-                      onDownload: (track) {
-                        context.read<DownloaderService>().enqueue(track);
-                      },
-                    ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final results = Selector<DownloaderService, String>(
+                  selector: (_, dl) => dl.queueFingerprint,
+                  builder: (context, _, _) => ResultsTable(
+                    tracks: _results,
+                    queuedIds: context.read<DownloaderService>().queuedIds,
+                    onDownload: (track) {
+                      context.read<DownloaderService>().enqueue(track);
+                    },
                   ),
-                ),
-                const SizedBox(width: 16),
-                const SizedBox(
-                  width: 360,
-                  child: DownloadQueuePanel(),
-                ),
-              ],
+                );
+                const queue = SizedBox(width: 360, child: DownloadQueuePanel());
+                if (constraints.maxWidth < 860) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(child: results),
+                      const SizedBox(height: 16),
+                      const SizedBox(height: 260, child: DownloadQueuePanel()),
+                    ],
+                  );
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Solo se reconstruye si cambia la membresía de la cola
+                    // (huella de ids+estados), no con cada tick de progreso.
+                    Expanded(child: results),
+                    const SizedBox(width: 16),
+                    queue,
+                  ],
+                );
+              },
             ),
           ),
         ],
