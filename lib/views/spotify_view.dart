@@ -5,6 +5,7 @@ import '../models/track.dart';
 import '../services/downloader_service.dart';
 import '../services/music_search_service.dart';
 import '../theme/one_dark_pro.dart';
+import '../theme/ui_tokens.dart';
 import '../widgets/download_queue_panel.dart';
 import '../widgets/results_table.dart';
 
@@ -63,24 +64,28 @@ class _SpotifyViewState extends State<SpotifyView> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(22),
+      padding: UiTokens.paddingPage,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: UiTokens.sizeTileView,
+                height: UiTokens.sizeTileView,
                 decoration: BoxDecoration(
                   color: OneDarkPro.blue.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(UiTokens.radiusCard),
                 ),
                 child: const ExcludeSemantics(
-                  child: Icon(Icons.music_note_rounded, color: OneDarkPro.blue),
+                  child: Icon(
+                    Icons.music_note_rounded,
+                    color: OneDarkPro.blueText,
+                    size: UiTokens.iconTileView,
+                  ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: UiTokens.spaceHeaderGap),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,64 +93,70 @@ class _SpotifyViewState extends State<SpotifyView> {
                     Text('Spotify Downloader', style: AppText.hero),
                     Text(
                       'MP3 con carátula y etiquetas ID3',
-                      style: AppText.secondary.copyWith(fontSize: 12),
+                      style: AppText.secondary,
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: UiTokens.spaceBlock),
           // Buscador
           Row(
             children: [
               Expanded(
                 child: SizedBox(
-                  height: 48,
+                  height: UiTokens.sizeControl,
                   child: TextField(
                     controller: _controller,
                     onSubmitted: (_) => _search(),
                     textInputAction: TextInputAction.search,
                     style: AppText.input,
-                    decoration: InputDecoration(
-                      hintText: 'Busca canción, artista o álbum…',
-                      hintStyle: AppText.secondary.copyWith(fontSize: 14),
-                      prefixIcon: const Icon(Icons.search_rounded),
+                    decoration: const InputDecoration(
+                      hintText: 'Busca una canción, artista o álbum…',
+                      prefixIcon: Icon(
+                        Icons.search_rounded,
+                        size: UiTokens.iconInline,
+                      ),
+                      prefixIconConstraints: BoxConstraints(
+                        minWidth: UiTokens.sizeControl,
+                        minHeight: UiTokens.sizeControl,
+                      ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: UiTokens.spaceControlGap),
               SizedBox(
-                height: 48,
+                height: UiTokens.sizeButton,
                 child: Tooltip(
                   message: 'Buscar (Enter)',
                   child: ElevatedButton.icon(
                     onPressed: _searching ? null : _search,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                    ),
                     icon: _searching
                         ? Semantics(
                             liveRegion: true,
                             label: 'Buscando',
                             child: const SizedBox(
-                              width: 16,
-                              height: 16,
+                              width: UiTokens.iconButton,
+                              height: UiTokens.iconButton,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: OneDarkPro.white,
+                                color: OneDarkPro.blueText,
                               ),
                             ),
                           )
-                        : const Icon(Icons.search_rounded, size: 20),
-                    label: const Text('Buscar', style: TextStyle(fontSize: 12)),
+                        : const Icon(
+                            Icons.search_rounded,
+                            size: UiTokens.iconButton,
+                          ),
+                    label: const Text('Buscar'),
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: UiTokens.spaceBlock),
           if (_error != null)
             Focus(
               focusNode: _errorFocus,
@@ -157,15 +168,19 @@ class _SpotifyViewState extends State<SpotifyView> {
                     liveRegion: true,
                     label: 'Error de búsqueda: $_error',
                     child: Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(UiTokens.spaceItemH),
                       decoration: BoxDecoration(
                         color: OneDarkPro.red.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(
+                          UiTokens.radiusControl,
+                        ),
                         border: Border.all(
                           color: hasFocus
                               ? OneDarkPro.blueText
                               : OneDarkPro.red.withValues(alpha: 0.4),
-                          width: hasFocus ? 2 : 1,
+                          width: hasFocus
+                              ? UiTokens.borderFocus
+                              : UiTokens.borderWidth,
                         ),
                       ),
                       child: Row(
@@ -174,27 +189,26 @@ class _SpotifyViewState extends State<SpotifyView> {
                             child: Icon(
                               Icons.error_outline_rounded,
                               color: OneDarkPro.redText,
-                              size: 18,
+                              size: UiTokens.iconInline,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: UiTokens.spaceInline),
                           Expanded(
                             child: Text(
                               _error!,
-                              style: AppText.body.copyWith(
+                              style: AppText.secondary.copyWith(
                                 color: OneDarkPro.redText,
-                                fontSize: 12.5,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: UiTokens.spaceInline),
                           TextButton.icon(
                             onPressed: _searching ? null : _search,
-                            icon: const Icon(Icons.refresh_rounded, size: 16),
-                            label: const Text(
-                              'Reintentar',
-                              style: TextStyle(fontSize: 12),
+                            icon: const Icon(
+                              Icons.refresh_rounded,
+                              size: UiTokens.iconButton,
                             ),
+                            label: const Text('Reintentar'),
                           ),
                         ],
                       ),
@@ -203,7 +217,7 @@ class _SpotifyViewState extends State<SpotifyView> {
                 },
               ),
             ),
-          if (_error != null) const SizedBox(height: 12),
+          if (_error != null) const SizedBox(height: UiTokens.spaceEmptyGap),
           // Resultados a la izquierda, cola a la derecha.
           // En ventanas estrechas se apilan para no comprimir la tabla.
           Expanded(
@@ -219,25 +233,31 @@ class _SpotifyViewState extends State<SpotifyView> {
                     },
                   ),
                 );
-                const queue = SizedBox(width: 360, child: DownloadQueuePanel());
-                if (constraints.maxWidth < 860) {
+                if (constraints.maxWidth < UiTokens.stackBelow) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(child: results),
-                      const SizedBox(height: 16),
-                      const SizedBox(height: 260, child: DownloadQueuePanel()),
+                      Expanded(flex: 1, child: results),
+                      const SizedBox(height: UiTokens.spaceBlock),
+                      const Expanded(flex: 1, child: DownloadQueuePanel()),
                     ],
                   );
                 }
+                final queueWidth =
+                    constraints.maxWidth >= UiTokens.queueWideFrom
+                    ? UiTokens.queueWide
+                    : UiTokens.queueNarrow;
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Solo se reconstruye si cambia la membresía de la cola
                     // (huella de ids+estados), no con cada tick de progreso.
                     Expanded(child: results),
-                    const SizedBox(width: 16),
-                    queue,
+                    const SizedBox(width: UiTokens.spaceBlock),
+                    SizedBox(
+                      width: queueWidth,
+                      child: const DownloadQueuePanel(),
+                    ),
                   ],
                 );
               },

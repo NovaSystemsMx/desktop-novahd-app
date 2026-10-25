@@ -60,6 +60,13 @@ Future<WindowOptions> _windowOptions() async {
     final scale = (display.scaleFactor ?? 1).toDouble();
     final min = _minWindowForScale(scale);
     final visible = display.visibleSize ?? display.size;
+    // `screen_retriever` devuelve píxeles físicos; `WindowOptions` trabaja
+    // en lógicos. Sin esta conversión, a 125% la ventana inicial (1200)
+    // se convierte en 1500 físicos y no cabe en una pantalla de 1536.
+    final visibleLogical = Size(
+      visible.width / scale,
+      visible.height / scale,
+    );
     double fit(double want, double minSide, double visibleSide) {
       final maxSide = math.max(minSide, visibleSide - 80);
       return want.clamp(minSide, maxSide).toDouble();
@@ -67,8 +74,8 @@ Future<WindowOptions> _windowOptions() async {
 
     return WindowOptions(
       size: Size(
-        fit(1200, min.width, visible.width),
-        fit(660, min.height, visible.height),
+        fit(1200, min.width, visibleLogical.width),
+        fit(660, min.height, visibleLogical.height),
       ),
       minimumSize: min,
       center: true,

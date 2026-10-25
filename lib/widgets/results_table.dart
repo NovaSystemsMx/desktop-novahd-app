@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../models/track.dart';
 import '../theme/one_dark_pro.dart';
+import '../theme/ui_tokens.dart';
 import 'empty_icon_tile.dart';
 
 /// Tabla de resultados de búsqueda.
@@ -23,11 +24,11 @@ class ResultsTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(UiTokens.radiusCard),
       child: Container(
         decoration: BoxDecoration(
           color: OneDarkPro.sidebar,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(UiTokens.radiusCard),
           border: Border.all(color: OneDarkPro.border),
         ),
         child: tracks.isEmpty ? _emptyBody() : _fullBody(),
@@ -42,20 +43,18 @@ class ResultsTable extends StatelessWidget {
         const Expanded(
           child: Center(
             child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              padding: EdgeInsets.all(UiTokens.spaceBlock),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   ExcludeSemantics(
                     child: EmptyIconTile(icon: Icons.search_rounded),
                   ),
-                  SizedBox(width: 12),
-                  Flexible(
-                    child: Text(
-                      'Busca una canción, artista o álbum para ver resultados.',
-                      textAlign: TextAlign.center,
-                      style: AppText.secondary,
-                    ),
+                  SizedBox(height: UiTokens.spaceEmptyGap),
+                  Text(
+                    'Busca una canción, artista o álbum para ver resultados.',
+                    textAlign: TextAlign.center,
+                    style: AppText.secondary,
                   ),
                 ],
               ),
@@ -77,30 +76,28 @@ class ResultsTable extends StatelessWidget {
 
   Widget _tableHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      height: UiTokens.sizeCardHeader,
+      padding: UiTokens.paddingCardHeader,
       decoration: const BoxDecoration(
         color: OneDarkPro.darker,
         border: Border(bottom: BorderSide(color: OneDarkPro.border)),
       ),
-      child: const SizedBox(
-        height: 24,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(width: 44),
-            SizedBox(width: 12),
-            Expanded(flex: 3, child: _Header('TITULO / ARTISTA')),
-            Expanded(flex: 3, child: _Header('ALBUM')),
-            SizedBox(width: 70, child: _Header('DURACION')),
-            SizedBox(
-              width: 140,
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: _Header('ACCION'),
-              ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(width: UiTokens.colCover),
+          SizedBox(width: UiTokens.colCoverGap),
+          Expanded(flex: 3, child: _Header('CANCIÓN')),
+          Expanded(flex: 3, child: _Header('ÁLBUM')),
+          SizedBox(width: UiTokens.colDuration, child: _Header('DURACIÓN')),
+          SizedBox(
+            width: UiTokens.colAction,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: _Header('ACCIÓN'),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -110,8 +107,11 @@ class ResultsTable extends StatelessWidget {
     // usan altura uniforme (64) y ValueKey para un diff barato.
     return ListView.separated(
       itemCount: tracks.length,
-      separatorBuilder: (_, _) =>
-          const Divider(height: 1, indent: 16, endIndent: 16),
+      separatorBuilder: (_, _) => const Divider(
+        height: UiTokens.borderWidth,
+        indent: UiTokens.spaceRowH,
+        endIndent: UiTokens.spaceRowH,
+      ),
       itemBuilder: (context, i) {
         final t = tracks[i];
         final queued = queuedIds.contains(t.id);
@@ -119,88 +119,99 @@ class ResultsTable extends StatelessWidget {
         // "Descargar" (evita doble tab-stop y toques accidentales).
         return Container(
           key: ValueKey(t.id),
+          height: UiTokens.sizeRow,
           color: Colors.transparent,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          padding: UiTokens.paddingRow,
           child: Row(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(UiTokens.radiusControl),
                 child: t.imageSmall.isNotEmpty
                     ? CachedNetworkImage(
                         imageUrl: t.imageSmall,
-                        width: 44,
-                        height: 44,
+                        width: UiTokens.colCover,
+                        height: UiTokens.colCover,
                         fit: BoxFit.cover,
                         placeholder: (_, _) => _coverFallback(),
                         errorWidget: (_, _, _) => _coverFallback(),
                       )
                     : _coverFallback(),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: UiTokens.colCoverGap),
               Expanded(
                 flex: 3,
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      t.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.title,
+                    Tooltip(
+                      message: t.title,
+                      child: Text(
+                        t.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.title,
+                      ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      t.artistsLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.secondary.copyWith(fontSize: 12),
+                    const SizedBox(height: UiTokens.spaceTextGap),
+                    Tooltip(
+                      message: t.artistsLabel,
+                      child: Text(
+                        t.artistsLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.secondary,
+                      ),
                     ),
                   ],
                 ),
               ),
               Expanded(
                 flex: 3,
-                child: Text(
-                  t.album,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppText.body.copyWith(fontSize: 12.5),
+                child: Tooltip(
+                  message: t.album,
+                  child: Text(
+                    t.album,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.body,
+                  ),
                 ),
               ),
               SizedBox(
-                width: 70,
-                child: Text(t.durationLabel, style: AppText.secondary),
+                width: UiTokens.colDuration,
+                child: Text(t.durationLabel, style: AppText.body),
               ),
               SizedBox(
-                width: 140,
+                width: UiTokens.colAction,
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: queued
                       ? Container(
-                          width: 120,
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
+                            horizontal: UiTokens.spaceItemH,
+                            vertical: UiTokens.spaceControlV,
                           ),
                           decoration: BoxDecoration(
                             color: OneDarkPro.blue.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(
+                              UiTokens.radiusControl,
+                            ),
                             border: Border.all(
                               color: OneDarkPro.blue.withValues(alpha: 0.4),
                             ),
                           ),
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              ExcludeSemantics(
+                              const ExcludeSemantics(
                                 child: Icon(
                                   Icons.check_circle_rounded,
                                   color: OneDarkPro.blueText,
-                                  size: 16,
+                                  size: UiTokens.iconButton,
                                 ),
                               ),
-                              SizedBox(width: 6),
+                              const SizedBox(width: UiTokens.spaceBadgeH),
                               Text(
                                 'En cola',
                                 style: AppText.body.copyWith(
@@ -211,24 +222,13 @@ class ResultsTable extends StatelessWidget {
                             ],
                           ),
                         )
-                      : SizedBox(
-                          width: 120,
-                          child: ElevatedButton.icon(
-                            onPressed: () => onDownload(t),
-                            icon: const Icon(Icons.download_rounded, size: 16),
-                            label: const Text(
-                              'Descargar',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 14,
-                              ),
-                              minimumSize: const Size(0, 44),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
+                      : ElevatedButton.icon(
+                          onPressed: () => onDownload(t),
+                          icon: const Icon(
+                            Icons.download_rounded,
+                            size: UiTokens.iconButton,
                           ),
+                          label: const Text('Descargar'),
                         ),
                 ),
               ),
@@ -241,14 +241,14 @@ class ResultsTable extends StatelessWidget {
 
   Widget _coverFallback() {
     return Container(
-      width: 44,
-      height: 44,
+      width: UiTokens.colCover,
+      height: UiTokens.colCover,
       color: OneDarkPro.darker,
       child: const ExcludeSemantics(
         child: Icon(
           Icons.music_note_rounded,
           color: OneDarkPro.fgDim,
-          size: 20,
+          size: UiTokens.iconTileView,
         ),
       ),
     );

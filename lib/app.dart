@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/one_dark_pro.dart';
+import '../theme/ui_tokens.dart';
 import '../views/settings_view.dart';
 import '../views/spotify_view.dart';
 import '../widgets/sidebar.dart';
@@ -29,27 +30,33 @@ class _NovadhAppShellState extends State<NovadhAppShell> {
               children: [
                 // Barra superior fina estilo desktop.
                 Container(
-                  height: 44,
+                  height: UiTokens.sizeTopBar,
                   decoration: const BoxDecoration(
                     color: OneDarkPro.sidebar,
                     border: Border(
                       bottom: BorderSide(color: OneDarkPro.border),
                     ),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: UiTokens.spaceCard,
+                  ),
                   child: Row(
                     children: [
-                      ExcludeSemantics(
+                      const ExcludeSemantics(
                         child: Icon(
                           Icons.download_rounded,
-                          size: 14,
+                          size: UiTokens.iconInline,
                           color: OneDarkPro.blue,
                         ),
                       ),
-                      SizedBox(width: 8),
-                      Text(
-                        'Nova Hub Downloader - Windows v0.6',
-                        style: AppText.secondary.copyWith(fontSize: 12),
+                      const SizedBox(width: UiTokens.spaceInline),
+                      Expanded(
+                        child: Text(
+                          'Nova Hub Downloader — Windows v0.8',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppText.caption,
+                        ),
                       ),
                     ],
                   ),
@@ -59,7 +66,7 @@ class _NovadhAppShellState extends State<NovadhAppShell> {
                       ? const SettingsView()
                       : const SpotifyView(),
                 ),
-                const StatusBar(),
+                StatusBar(tab: _tab),
               ],
             ),
           ),
