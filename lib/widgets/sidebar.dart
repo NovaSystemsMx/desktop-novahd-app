@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../services/downloader_service.dart';
 import '../theme/one_dark_pro.dart';
+import '../theme/ui_tokens.dart';
 
 enum PlatformTab { spotify, settings }
 
@@ -15,7 +16,7 @@ class Sidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 258,
+      width: UiTokens.sizeSidebar,
       decoration: const BoxDecoration(
         color: OneDarkPro.sidebar,
         border: Border(right: BorderSide(color: OneDarkPro.border)),
@@ -24,15 +25,20 @@ class Sidebar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 20, 18, 8),
+            padding: const EdgeInsets.fromLTRB(
+              UiTokens.spaceCard,
+              UiTokens.spaceCard,
+              UiTokens.spaceCard,
+              UiTokens.spaceInline,
+            ),
             child: Row(
               children: [
                 Container(
-                  width: 34,
-                  height: 34,
+                  width: UiTokens.sizeTileSidebar,
+                  height: UiTokens.sizeTileSidebar,
                   decoration: BoxDecoration(
                     color: OneDarkPro.blue.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(UiTokens.radiusControl),
                     border: Border.all(
                       color: OneDarkPro.blue.withValues(alpha: 0.4),
                     ),
@@ -41,41 +47,28 @@ class Sidebar extends StatelessWidget {
                     child: Icon(
                       Icons.download_rounded,
                       color: OneDarkPro.blue,
-                      size: 20,
+                      size: UiTokens.iconTileSidebar,
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: UiTokens.spaceInline),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'NOVA HUB',
-                      style: TextStyle(
-                        color: OneDarkPro.white,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.4,
-                      ),
-                    ),
-                    Text(
-                      'Downloader',
-                      style: AppText.secondary.copyWith(fontSize: 11),
-                    ),
+                    Text('NOVA HUB', style: AppText.brand),
+                    Text('Downloader', style: AppText.caption),
                   ],
                 ),
               ],
             ),
           ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(18, 14, 18, 6),
-            child: Text(
-              'PLATAFORMAS',
-              style: AppText.caps.copyWith(letterSpacing: 1.1),
-            ),
+          const Padding(
+            padding: UiTokens.paddingSidebarLabel,
+            child: Text('PLATAFORMAS', style: AppText.caps),
           ),
           _item(
             context,
-            icon: Icons.music_note_outlined,
+            icon: Icons.music_note_rounded,
             color: OneDarkPro.blue,
             label: 'Spotify',
             subtitle: 'Downloader activo',
@@ -98,33 +91,54 @@ class Sidebar extends StatelessWidget {
             badge: 'Pronto',
           ),
           const Spacer(),
-          const Divider(height: 1),
+          const Divider(height: UiTokens.borderWidth),
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(
+              horizontal: UiTokens.spaceItemOuterH,
+              vertical: UiTokens.spaceItemH,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                OutlinedButton.icon(
-                  onPressed: () => onSelect(PlatformTab.settings),
-                  icon: const Icon(Icons.settings_rounded, size: 16),
-                  label: const Text('Ajustes', style: TextStyle(fontSize: 12)),
+                Semantics(
+                  selected: selected == PlatformTab.settings,
+                  child: OutlinedButton.icon(
+                    onPressed: () => onSelect(PlatformTab.settings),
+                    style: selected == PlatformTab.settings
+                        ? OutlinedButton.styleFrom(
+                            backgroundColor: OneDarkPro.card,
+                            foregroundColor: OneDarkPro.white,
+                            side: BorderSide(
+                              color: OneDarkPro.blue.withValues(alpha: 0.45),
+                            ),
+                          )
+                        : null,
+                    icon: Icon(
+                      Icons.settings_rounded,
+                      size: UiTokens.iconButton,
+                      color: selected == PlatformTab.settings
+                          ? OneDarkPro.blue
+                          : null,
+                    ),
+                    label: const Text('Ajustes'),
+                  ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: UiTokens.spaceInline),
                 Consumer<DownloaderService>(
                   builder: (context, dl, _) => OutlinedButton.icon(
                     onPressed: dl.openDownloadsFolder,
-                    icon: const Icon(Icons.folder_open_rounded, size: 16),
-                    label: const Text(
-                      'Abrir Descargas',
-                      style: TextStyle(fontSize: 12),
+                    icon: const Icon(
+                      Icons.folder_open_rounded,
+                      size: UiTokens.iconButton,
                     ),
+                    label: const Text('Abrir descargas'),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Nova Hub v0.5',
+                const SizedBox(height: UiTokens.spaceInline),
+                const Text(
+                  'Nova Hub v0.9',
                   textAlign: TextAlign.center,
-                  style: AppText.secondary.copyWith(fontSize: 11),
+                  style: AppText.caption,
                 ),
               ],
             ),
@@ -144,21 +158,27 @@ class Sidebar extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: UiTokens.spaceItemOuterH,
+        vertical: UiTokens.spaceItemOuterV,
+      ),
       child: Semantics(
         button: true,
         selected: active,
         label: active ? '$label, seleccionado' : label,
         child: InkWell(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(UiTokens.radiusControl),
           focusColor: OneDarkPro.blueText.withValues(alpha: 0.22),
           hoverColor: OneDarkPro.cardHover,
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(
+              horizontal: UiTokens.spaceItemH,
+              vertical: UiTokens.spaceItemV,
+            ),
             decoration: BoxDecoration(
               color: active ? OneDarkPro.card : Colors.transparent,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(UiTokens.radiusControl),
               border: Border.all(
                 color: active
                     ? OneDarkPro.blue.withValues(alpha: 0.45)
@@ -167,28 +187,34 @@ class Sidebar extends StatelessWidget {
             ),
             child: Row(
               children: [
-                ExcludeSemantics(child: Icon(icon, color: color, size: 20)),
-                const SizedBox(width: 10),
+                ExcludeSemantics(
+                  child: Icon(
+                    icon,
+                    color: color,
+                    size: UiTokens.iconTileSidebar,
+                  ),
+                ),
+                const SizedBox(width: UiTokens.spaceInline),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(label, style: AppText.title),
+                      Tooltip(
+                        message: label,
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppText.title,
+                        ),
+                      ),
                       Text(
                         subtitle,
-                        style: AppText.secondary.copyWith(fontSize: 11),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.caption,
                       ),
                     ],
-                  ),
-                ),
-                ExcludeSemantics(
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: OneDarkPro.blue,
-                      shape: BoxShape.circle,
-                    ),
                   ),
                 ),
               ],
@@ -205,53 +231,54 @@ class Sidebar extends StatelessWidget {
     required String badge,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: UiTokens.spaceItemOuterH,
+        vertical: UiTokens.spaceItemOuterV,
+      ),
       child: Semantics(
         enabled: false,
         label: '$label, próximamente',
         child: Tooltip(
           message: '$label (próximamente)',
-          child: Opacity(
-            opacity: 0.45,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                children: [
-                  ExcludeSemantics(
-                    child: Icon(icon, color: OneDarkPro.fgDim, size: 20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: UiTokens.spaceItemH,
+              vertical: UiTokens.spaceItemV,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(UiTokens.radiusControl),
+            ),
+            child: Row(
+              children: [
+                ExcludeSemantics(
+                  child: Icon(
+                    icon,
+                    color: OneDarkPro.fgDim,
+                    size: UiTokens.iconTileSidebar,
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.body.copyWith(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                ),
+                const SizedBox(width: UiTokens.spaceInline),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.title.copyWith(color: OneDarkPro.fgDim),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: OneDarkPro.darker,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: OneDarkPro.border),
-                    ),
-                    child: Text(
-                      badge,
-                      style: AppText.caps.copyWith(fontSize: 10),
-                    ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: UiTokens.spaceBadgeH,
+                    vertical: UiTokens.spaceBadgeV,
                   ),
-                ],
-              ),
+                  decoration: BoxDecoration(
+                    color: OneDarkPro.darker,
+                    borderRadius: BorderRadius.circular(UiTokens.radiusSmall),
+                    border: Border.all(color: OneDarkPro.border),
+                  ),
+                  child: Text(badge, style: AppText.caps),
+                ),
+              ],
             ),
           ),
         ),

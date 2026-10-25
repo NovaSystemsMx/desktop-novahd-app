@@ -4,9 +4,10 @@ import 'package:provider/provider.dart';
 import '../services/downloader_service.dart';
 import '../services/music_search_service.dart';
 import '../theme/one_dark_pro.dart';
+import '../theme/ui_tokens.dart';
 
-/// Barra de estado inferior persistente (patron desktop clasico).
-/// Refleja busquedas y descargas en tiempo real.
+/// Barra de estado inferior de Spotify (patrón desktop clásico).
+/// Refleja búsquedas y descargas en tiempo real. Ajustes no la usa.
 class StatusBar extends StatelessWidget {
   const StatusBar({super.key});
 
@@ -27,19 +28,19 @@ class StatusBar extends StatelessWidget {
         } else if (downloading > 0) {
           final total = downloading + queued;
           text = total > 1
-              ? 'Descargando $downloading de $total...'
-              : 'Descargando...';
+              ? 'Descargando $downloading de $total…'
+              : 'Descargando…';
           dot = OneDarkPro.blue;
         } else if (sp.isSearching) {
           text = sp.lastQuery.isNotEmpty
-              ? "Buscando '${sp.lastQuery}'..."
-              : 'Buscando...';
+              ? "Buscando '${sp.lastQuery}'…"
+              : 'Buscando…';
           dot = OneDarkPro.blue;
         } else if (queued > 0) {
           text = queued == 1 ? '1 en cola' : '$queued en cola';
           dot = OneDarkPro.yellow;
         } else if (sp.lastSearchError != null) {
-          text = 'Error en la busqueda';
+          text = 'Error en la búsqueda';
           dot = OneDarkPro.red;
         } else if (failed > 0) {
           text = failed == 1
@@ -62,29 +63,29 @@ class StatusBar extends StatelessWidget {
         }
 
         return Container(
-          height: 36,
+          height: UiTokens.sizeStatusBar,
           decoration: const BoxDecoration(
             color: OneDarkPro.sidebar,
             border: Border(top: BorderSide(color: OneDarkPro.border)),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: UiTokens.spaceCard),
           child: Row(
             children: [
               ExcludeSemantics(
                 child: Container(
-                  width: 10,
-                  height: 10,
+                  width: UiTokens.sizeStatusDot,
+                  height: UiTokens.sizeStatusDot,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: dot.withValues(alpha: 0.45),
-                      width: 1.5,
+                      width: UiTokens.borderWidth,
                     ),
                   ),
                   child: Center(
                     child: Container(
-                      width: 5,
-                      height: 5,
+                      width: UiTokens.sizeStatusDotInner,
+                      height: UiTokens.sizeStatusDotInner,
                       decoration: BoxDecoration(
                         color: dot,
                         shape: BoxShape.circle,
@@ -93,13 +94,13 @@ class StatusBar extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: UiTokens.spaceInline),
               Expanded(
                 child: Text(
                   text,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppText.secondary.copyWith(fontSize: 12),
+                  style: AppText.caption,
                 ),
               ),
             ],

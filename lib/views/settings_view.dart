@@ -8,6 +8,7 @@ import '../services/app_log.dart';
 import '../services/auth_store.dart';
 import '../services/downloader_service.dart';
 import '../theme/one_dark_pro.dart';
+import '../theme/ui_tokens.dart';
 
 /// Vista de Ajustes: autenticación, consola de sesión y espacio futuro.
 class SettingsView extends StatefulWidget {
@@ -56,13 +57,12 @@ class _SettingsViewState extends State<SettingsView> {
     } catch (_) {
       try {
         await Process.run('cmd', ['/c', 'start', '', url]);
-      } catch (e) {
+      } catch (_) {
         AppLog.instance.error('Ajustes', 'No se pudo abrir el navegador');
       }
     }
   }
 
-  // Punto 5: verifica SOLO las guardadas, con veredicto claro.
   // Punto 5: verifica SOLO las guardadas, con veredicto claro.
   // El texto solo aparece tras clic; el punto usa _storedOk siempre.
   Future<void> _verify() async {
@@ -113,7 +113,7 @@ class _SettingsViewState extends State<SettingsView> {
           await auth.saveCookies(previous);
         }
         throw Exception(
-          'No validas (${saved.saved} de ${saved.total}): ${r.detail}',
+          'No válidas (${saved.saved} de ${saved.total}): ${r.detail}',
         );
       }
       _cookiesCtrl.clear();
@@ -121,7 +121,7 @@ class _SettingsViewState extends State<SettingsView> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Guardadas ${saved.saved} de ${saved.total} y validas.',
+            'Guardadas ${saved.saved} de ${saved.total} y válidas.',
           ),
         ),
       );
@@ -144,23 +144,30 @@ class _SettingsViewState extends State<SettingsView> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: OneDarkPro.card,
-        title: const Text(
-          'Cookies guardadas',
-          style: TextStyle(color: OneDarkPro.white),
+        titlePadding: const EdgeInsets.fromLTRB(
+          UiTokens.spacePage,
+          UiTokens.spacePage,
+          UiTokens.spacePage,
+          0,
         ),
+        contentPadding: const EdgeInsets.fromLTRB(
+          UiTokens.spacePage,
+          UiTokens.spaceEmptyGap,
+          UiTokens.spacePage,
+          0,
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(
+          UiTokens.spacePage,
+          0,
+          UiTokens.spacePage,
+          UiTokens.spaceCard,
+        ),
+        title: const Text('Cookies guardadas'),
         content: SizedBox(
-          width: 520,
-          height: 300,
+          width: UiTokens.sizeDialogW,
+          height: UiTokens.sizeDialogH,
           child: SingleChildScrollView(
-            child: SelectableText(
-              text,
-              style: const TextStyle(
-                color: OneDarkPro.fg,
-                fontSize: 11,
-                fontFamily: 'Consolas',
-              ),
-            ),
+            child: SelectableText(text, style: AppText.mono),
           ),
         ),
         actions: [
@@ -210,369 +217,391 @@ class _SettingsViewState extends State<SettingsView> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(22),
+      padding: UiTokens.paddingPage,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: UiTokens.sizeTileView,
+                height: UiTokens.sizeTileView,
                 decoration: BoxDecoration(
                   color: OneDarkPro.blue.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(UiTokens.radiusCard),
                 ),
                 child: const ExcludeSemantics(
-                  child: Icon(Icons.settings_rounded, color: OneDarkPro.blue),
+                  child: Icon(
+                    Icons.settings_rounded,
+                    color: OneDarkPro.blueText,
+                    size: UiTokens.iconTileView,
+                  ),
                 ),
               ),
-              const SizedBox(width: 12),
-              const Expanded(
+              const SizedBox(width: UiTokens.spaceHeaderGap),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Ajustes', style: AppText.hero),
                     Text(
                       'Sesión, descargas y consola',
-                      style: TextStyle(color: OneDarkPro.fgDim, fontSize: 12),
+                      style: AppText.secondary,
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
-          _card([
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: const BoxDecoration(
-                color: OneDarkPro.darker,
-                border: Border(bottom: BorderSide(color: OneDarkPro.border)),
-              ),
-              child: SizedBox(
-                height: 24,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+          const SizedBox(height: UiTokens.spaceBlock),
+          _cardWithHeader(
+            title: 'AUTENTICACIÓN YOUTUBE',
+            trailing: Consumer2<AuthStore, DownloaderService>(
+              builder: (context, authTop, dl, _) {
+                final base = !authTop.hasStoredCookies
+                    ? 'Sin cookies guardadas.'
+                    : _storedOk == null
+                    ? 'Cookies guardadas, sin verificar.'
+                    : _storedOk!
+                    ? 'Cookies válidas.'
+                    : 'Cookies no válidas.';
+                return Tooltip(
+                  message: '$base Último uso: ${dl.lastAuthLabel}.',
+                  child: Icon(
+                    Icons.cookie_rounded,
+                    size: UiTokens.iconTileView,
+                    color: !authTop.hasStoredCookies || _storedOk == null
+                        ? OneDarkPro.fgDim
+                        : _storedOk!
+                        ? OneDarkPro.greenText
+                        : OneDarkPro.redText,
+                  ),
+                );
+              },
+            ),
+            children: [
+              Consumer<AuthStore>(
+                builder: (context, auth, _) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Expanded(
-                      child: Text('AUTENTICACIÓN YOUTUBE', style: AppText.caps),
+                    Text(
+                      'Paso 1: instala la extensión GET COOKIES LOCALLY en tu navegador.',
+                      style: AppText.body,
                     ),
-                    Consumer2<AuthStore, DownloaderService>(
-                      builder: (context, authTop, dl, _) {
-                        final base = !authTop.hasStoredCookies
-                            ? 'Sin cookies guardadas.'
-                            : _storedOk == null
-                            ? 'Cookies guardadas, sin verificar.'
-                            : _storedOk!
-                            ? 'Cookies validas.'
-                            : 'Cookies no validas.';
-                        return Tooltip(
-                          message: '$base Ultimo uso: ${dl.lastAuthLabel}.',
-                          child: Icon(
-                            Icons.cookie_rounded,
-                            size: 20,
-                            color:
-                                !authTop.hasStoredCookies || _storedOk == null
-                                ? OneDarkPro.fgDim
-                                : _storedOk!
-                                ? OneDarkPro.greenText
-                                : OneDarkPro.redText,
+                    const SizedBox(height: UiTokens.spaceInline),
+                    Text(
+                      'Paso 2: abre YouTube con tu sesión iniciada.',
+                      style: AppText.body,
+                    ),
+                    const SizedBox(height: UiTokens.spaceItemH),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: ElevatedButton.icon(
+                        onPressed: _openLogin,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: OneDarkPro.buttonRed,
+                          foregroundColor: OneDarkPro.darker,
+                        ),
+                        icon: const Icon(
+                          Icons.play_circle_fill_rounded,
+                          size: UiTokens.iconButton,
+                        ),
+                        label: const Text('Abrir YouTube para iniciar sesión'),
+                      ),
+                    ),
+                    const SizedBox(height: UiTokens.spaceInline),
+                    Text(
+                      'Paso 3: copia las cookies y pégalas abajo.',
+                      style: AppText.body,
+                    ),
+                    const SizedBox(height: UiTokens.spaceItemH),
+                    const Text(
+                      'COOKIES (FORMATO NETSCAPE)',
+                      style: AppText.caps,
+                    ),
+                    const SizedBox(height: UiTokens.spaceInline),
+                    TextField(
+                      controller: _cookiesCtrl,
+                      maxLines: 4,
+                      minLines: 3,
+                      style: AppText.input,
+                      decoration: const InputDecoration(
+                        hintText: 'Pega aquí las cookies exportadas por GET COOKIES LOCALLY…',
+                      ),
+                    ),
+                    const SizedBox(height: UiTokens.spaceInline),
+                    if (_saveError != null)
+                      Semantics(
+                        container: true,
+                        liveRegion: true,
+                        label: 'Error al guardar cookies: $_saveError',
+                        child: Container(
+                          margin: const EdgeInsets.only(
+                            bottom: UiTokens.spaceInline,
                           ),
-                        );
-                      },
+                          padding: const EdgeInsets.all(UiTokens.spaceItemH),
+                          decoration: BoxDecoration(
+                            color: OneDarkPro.red.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(
+                              UiTokens.radiusControl,
+                            ),
+                            border: Border.all(
+                              color: OneDarkPro.red.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              const ExcludeSemantics(
+                                child: Icon(
+                                  Icons.error_outline_rounded,
+                                  color: OneDarkPro.redText,
+                                  size: UiTokens.iconInline,
+                                ),
+                              ),
+                              const SizedBox(width: UiTokens.spaceInline),
+                              Expanded(
+                                child: Text(
+                                  _saveError!,
+                                  style: AppText.secondary.copyWith(
+                                    color: OneDarkPro.redText,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: UiTokens.spaceInline),
+                              TextButton.icon(
+                                onPressed: _saving ? null : _saveCookies,
+                                icon: const Icon(
+                                  Icons.refresh_rounded,
+                                  size: UiTokens.iconButton,
+                                ),
+                                label: const Text('Reintentar'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    Wrap(
+                      spacing: UiTokens.spaceControlGap,
+                      runSpacing: UiTokens.spaceInline,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: _saving ? null : _saveCookies,
+                          icon: const Icon(
+                            Icons.save_rounded,
+                            size: UiTokens.iconButton,
+                          ),
+                          label: const Text('Guardar cookies'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: auth.hasStoredCookies
+                              ? () {
+                                  auth.clearCookies();
+                                  setState(() {
+                                    _checkResult = null;
+                                  });
+                                }
+                              : null,
+                          icon: const Icon(
+                            Icons.delete_outline_rounded,
+                            size: UiTokens.iconButton,
+                          ),
+                          label: const Text('Borrar'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: auth.hasStoredCookies
+                              ? _viewCookies
+                              : null,
+                          icon: const Icon(
+                            Icons.visibility_rounded,
+                            size: UiTokens.iconButton,
+                          ),
+                          label: const Text('Ver'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: _checking || !auth.hasStoredCookies
+                              ? null
+                              : _verify,
+                          icon: const Icon(
+                            Icons.verified_rounded,
+                            size: UiTokens.iconButton,
+                          ),
+                          label: const Text('Verificar'),
+                        ),
+                        if (_checking)
+                          const SizedBox(
+                            width: UiTokens.iconButton,
+                            height: UiTokens.iconButton,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        if (_checkResult != null)
+                          Text(
+                            _checkOk
+                                ? 'Cookies válidas.'
+                                : 'Cookies no válidas.',
+                            style: AppText.secondary.copyWith(
+                              color: _checkOk
+                                  ? OneDarkPro.greenText
+                                  : OneDarkPro.redText,
+                            ),
+                          ),
+                      ],
                     ),
                   ],
                 ),
               ),
-            ),
-            Wrap(
-              spacing: 10,
+            ],
+          ),
+          const SizedBox(height: UiTokens.spaceBlock),
+          _cardWithHeader(
+            title: 'CONSOLA DE SESIÓN',
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                ElevatedButton.icon(
-                  onPressed: _openLogin,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE62117),
-                    foregroundColor: Colors.white,
-                  ),
-                  icon: const Icon(Icons.play_circle_fill_rounded, size: 18),
-                  label: const Text(
-                    'Iniciar Sesion',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Consumer<AuthStore>(
-              builder: (context, auth, _) => Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'Paso 1: instala la extension GET COOKIES LOCALLY en tu navegador.',
-                    style: TextStyle(color: OneDarkPro.fg, fontSize: 12.5),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Paso 2: abre YouTube con tu sesion iniciada, copia las cookies y pegalas abajo.',
-                    style: TextStyle(color: OneDarkPro.fg, fontSize: 12.5),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: _cookiesCtrl,
-                    maxLines: 4,
-                    minLines: 3,
-                    decoration: const InputDecoration(
-                      hintText: 'Pega aquí las cookies (formato Netscape, ej. de GET COOKIES LOCALLY)...',
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  if (_saveError != null)
-                    Semantics(
-                      container: true,
-                      liveRegion: true,
-                      label: 'Error al guardar cookies: $_saveError',
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: OneDarkPro.red.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: OneDarkPro.red.withValues(alpha: 0.4),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            const ExcludeSemantics(
-                              child: Icon(
-                                Icons.error_outline_rounded,
-                                color: OneDarkPro.redText,
-                                size: 18,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _saveError!,
-                                style: AppText.body.copyWith(
-                                  color: OneDarkPro.redText,
-                                  fontSize: 12.5,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            TextButton.icon(
-                              onPressed: _saving ? null : _saveCookies,
-                              icon: const Icon(Icons.refresh_rounded, size: 16),
-                              label: const Text(
-                                'Reintentar',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  Wrap(
-                    spacing: 10,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: _saving ? null : _saveCookies,
-                        icon: const Icon(Icons.save_rounded, size: 16),
-                        label: const Text(
-                          'Guardar cookies',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: auth.hasStoredCookies
-                            ? () {
-                                auth.clearCookies();
-                                setState(() {
-                                  _checkResult = null;
-                                });
-                              }
-                            : null,
-                        icon: const Icon(
-                          Icons.delete_outline_rounded,
-                          size: 16,
-                        ),
-                        label: const Text(
-                          'Borrar',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: auth.hasStoredCookies ? _viewCookies : null,
-                        icon: const Icon(Icons.visibility_rounded, size: 16),
-                        label: const Text(
-                          'Ver',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: _checking || !auth.hasStoredCookies
-                            ? null
-                            : _verify,
-                        icon: const Icon(Icons.verified_rounded, size: 16),
-                        label: const Text(
-                          'Verificar',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                      if (_checking)
-                        const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      if (_checkResult != null)
-                        Text(
-                          _checkOk ? 'Cookies validas.' : 'Cookies invalidas.',
-                          style: TextStyle(
-                            color: _checkOk
-                                ? OneDarkPro.greenText
-                                : OneDarkPro.redText,
-                            fontSize: 12,
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Consumer<DownloaderService>(
-                    builder: (context, dl, _) => Text(
-                      'Último uso: ${dl.lastAuthLabel}'
-                      '${dl.lastAuthOk ? ' · funcionó' : ''}',
-                      style: const TextStyle(
-                        color: OneDarkPro.fgDim,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ]),
-          const SizedBox(height: 18),
-          _section('CONSOLA DE SESIÓN'),
-          const SizedBox(height: 8),
-          _card([
-            Row(
-              children: [
-                const Spacer(),
                 Tooltip(
                   message: 'Limpiar consola',
                   child: IconButton(
                     onPressed: AppLog.instance.clear,
-                    icon: const Icon(Icons.cleaning_services_rounded, size: 18),
-                    color: OneDarkPro.fgDim,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 32,
+                    icon: const Icon(
+                      Icons.cleaning_services_rounded,
+                      size: UiTokens.iconHeaderAction,
                     ),
+                    color: OneDarkPro.fgDim,
                   ),
                 ),
+                const SizedBox(width: UiTokens.spaceCluster),
                 Tooltip(
                   message: 'Exportar log (novahd-YYYYMMDD.log)',
                   child: IconButton(
                     onPressed: _exportLog,
-                    icon: const Icon(Icons.download_rounded, size: 18),
-                    color: OneDarkPro.blue,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 32,
+                    icon: const Icon(
+                      Icons.download_rounded,
+                      size: UiTokens.iconHeaderAction,
                     ),
+                    color: OneDarkPro.blueText,
                   ),
                 ),
               ],
             ),
-            Container(
-              height: 220,
-              decoration: BoxDecoration(
-                color: OneDarkPro.darker,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: OneDarkPro.border),
-              ),
-              child: Consumer<AppLog>(
-                builder: (context, log, _) {
-                  _followBottom(log.entries.length);
-                  if (log.entries.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'Sin eventos en esta sesión.',
-                        style: TextStyle(color: OneDarkPro.fgDim, fontSize: 12),
-                      ),
-                    );
-                  }
-                  return ListView.builder(
-                    controller: _scroll,
-                    padding: const EdgeInsets.all(10),
-                    itemCount: log.entries.length,
-                    itemBuilder: (context, i) {
-                      final e = log.entries[i];
-                      final color = switch (e.level) {
-                        LogLevel.error => OneDarkPro.redText,
-                        LogLevel.warning => OneDarkPro.yellow,
-                        LogLevel.info => OneDarkPro.fgMid,
-                      };
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 1.5),
-                        child: SelectableText(
-                          e.line,
-                          style: TextStyle(
-                            color: color,
-                            fontSize: 11.5,
-                            fontFamily: 'Consolas',
-                          ),
+            children: [
+              Container(
+                height: UiTokens.sizeConsole,
+                decoration: BoxDecoration(
+                  color: OneDarkPro.darker,
+                  borderRadius: BorderRadius.circular(UiTokens.radiusControl),
+                  border: Border.all(color: OneDarkPro.border),
+                ),
+                child: Consumer<AppLog>(
+                  builder: (context, log, _) {
+                    _followBottom(log.entries.length);
+                    if (log.entries.isEmpty) {
+                      return const Center(
+                        child: Text(
+                          'Sin eventos en esta sesión.',
+                          style: AppText.secondary,
                         ),
                       );
-                    },
-                  );
-                },
+                    }
+                    return ListView.builder(
+                      controller: _scroll,
+                      padding: const EdgeInsets.all(UiTokens.spaceItemH),
+                      itemCount: log.entries.length,
+                      itemBuilder: (context, i) {
+                        final e = log.entries[i];
+                        final color = switch (e.level) {
+                          LogLevel.error => OneDarkPro.redText,
+                          // Excepción documentada: no hay `yellowText` en la
+                          // paleta cerrada; el contraste de `yellow` pasa AA.
+                          LogLevel.warning => OneDarkPro.yellow,
+                          LogLevel.info => OneDarkPro.fgMid,
+                        };
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: UiTokens.spaceItemOuterV,
+                          ),
+                          child: SelectableText(
+                            e.line,
+                            style: AppText.mono.copyWith(color: color),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
+            ],
+          ),
+          const SizedBox(height: UiTokens.spaceBlock),
+          const Padding(
+            padding: EdgeInsets.only(left: UiTokens.spaceCard),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('CONFIGURACIÓN', style: AppText.caps),
+                SizedBox(height: UiTokens.spaceInline),
+                Text(
+                  'Próximamente: carpeta de destino, calidad y concurrencia.',
+                  style: AppText.secondary,
+                ),
+              ],
             ),
-          ]),
-          const SizedBox(height: 18),
-          _section('CONFIGURACIÓN'),
-          const SizedBox(height: 8),
-          _card(const [
-            Text(
-              'Próximamente: carpeta destino, calidad y concurrencia.',
-              style: TextStyle(color: OneDarkPro.fgDim, fontSize: 12),
-            ),
-          ]),
+          ),
         ],
       ),
     );
   }
 
-  Widget _section(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        color: OneDarkPro.fgDim,
-        fontSize: 11,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.8,
-      ),
-    );
-  }
-
-  Widget _card(List<Widget> children) {
+  /// Card con tira de encabezado full-bleed (mismo patrón que las
+  /// tablas): título + acciones a la derecha, cuerpo con padding.
+  Widget _cardWithHeader({
+    required String title,
+    required Widget trailing,
+    required List<Widget> children,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: OneDarkPro.sidebar,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(UiTokens.radiusCard),
         border: Border.all(color: OneDarkPro.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: children,
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(UiTokens.radiusCard),
+            ),
+            child: Container(
+              height: UiTokens.sizeCardHeader,
+              padding: UiTokens.paddingCardHeader,
+              decoration: const BoxDecoration(
+                color: OneDarkPro.darker,
+                border: Border(bottom: BorderSide(color: OneDarkPro.border)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.caps,
+                    ),
+                  ),
+                  trailing,
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: UiTokens.paddingCard,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: children,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -183,7 +183,7 @@ class DownloaderService extends ChangeNotifier {
     task.status = DownloadStatus.downloading;
     task.progress = 0;
     task.attempts = 0;
-    task.message = 'Preparando...';
+    task.message = 'Preparando…';
     notifyListeners();
 
     if (!await _hasYtDlp()) {
@@ -213,7 +213,7 @@ class DownloaderService extends ChangeNotifier {
         final wait =
             backoffs[(task.attempts - 1).clamp(0, backoffs.length - 1)];
         task.message =
-            'Reintentando en ${wait.inSeconds}s (intento ${task.attempts + 1}/${AppConfig.maxAttempts})...';
+            'Reintentando en ${wait.inSeconds}s (intento ${task.attempts + 1}/${AppConfig.maxAttempts})…';
         notifyListeners();
         await Future.delayed(wait);
       }
@@ -242,7 +242,7 @@ class DownloaderService extends ChangeNotifier {
         ? task.track.youtubeUrl
         : 'ytsearch1:${task.track.youtubeQuery}';
 
-    task.message = 'Descargando audio...';
+    task.message = 'Descargando audio…';
     notifyListeners();
 
     // Fotos para identificar el recién generado y limpiar si se cancela.
@@ -268,11 +268,11 @@ class DownloaderService extends ChangeNotifier {
           audioQuality: AppConfig.audioQuality,
           extraArgs: [
             ...baseArgs,
-            if (stored) ...['--cookiefile', cookieFile!.path],
+            if (stored) ...['--cookies', cookieFile!.path],
           ],
           onProgress: (p) {
             task.progress = p;
-            task.message = 'Descargando... ${(p * 100).toStringAsFixed(0)}%';
+            task.message = 'Descargando… ${(p * 100).toStringAsFixed(0)}%';
             notifyListeners();
           },
         );
@@ -282,8 +282,15 @@ class DownloaderService extends ChangeNotifier {
 
       var exit = await attempt(const [], stored: useStored);
       if (exit != 0 && useStored) {
+        // Sin este rastro, el reintento sin auth puede funcionar y ocultar
+        // el motivo real (cookies rechazadas, expiradas o formato invalido).
+        AppLog.instance.warning(
+          'Descarga',
+          'Cookies rechazadas (${task.track.safeFileName}): '
+          '${_stderrExcerpt()}',
+        );
         // Contingencia: una vez sin auth.
-        task.message = 'Reintentando sin auth...';
+        task.message = 'Reintentando sin auth…';
         task.progress = 0;
         notifyListeners();
         exit = await attempt(const [], stored: false);
@@ -291,7 +298,7 @@ class DownloaderService extends ChangeNotifier {
       if (exit != 0) {
         // YouTube a veces responde 403 al cliente web: reintento con el
         // cliente android antes de dar la descarga por fallida.
-        task.message = 'Reintentando con cliente alternativo...';
+        task.message = 'Reintentando con cliente alternativo…';
         task.progress = 0;
         notifyListeners();
         exit = await attempt([
@@ -333,6 +340,13 @@ class DownloaderService extends ChangeNotifier {
     task.status = DownloadStatus.completed;
     task.message = 'Completado';
     notifyListeners();
+  }
+
+  /// Extracto de una linea del stderr de yt-dlp (acotado) para la consola.
+  String _stderrExcerpt() {
+    final text = engine.lastStderr.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (text.isEmpty) return 'sin detalle.';
+    return text.length <= 300 ? text : text.substring(text.length - 300);
   }
 
   Future<File> _safeRename(File src, String destPath) async {

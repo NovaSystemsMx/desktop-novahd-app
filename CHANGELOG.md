@@ -1,31 +1,65 @@
 # CHANGELOG - Nova Hub Downloader
 
-## (en curso) — Accesibilidad y contraste UI
+## v0.9 — Correcciones de layout y descargas
 
+- Corrige el desbordamiento de 1 px en los tiles de la cola: el borde
+  pasa a `foregroundDecoration` y deja de consumir los 40 px útiles
+  del tile de 64.
+- Corrige el valor de accesibilidad de la barra de progreso para que use
+  un porcentaje válido (`42%`) en lugar de texto libre.
+- La insignia de "completado" pasa de glifo a disco vectorial con check:
+  a 125% el hinting del glifo aplanaba la base del círculo y el icono se
+  veía cortado por abajo.
+- Arregla la descarga autenticada: yt-dlp recibía el flag inexistente
+  `--cookiefile` (fallaba al instante y la cola caía a "sin auth"), el
+  temporal se escribía sin la cabecera Netscape y al guardar se
+  descartaban las cookies HttpOnly (`#HttpOnly_`), que son justo las de
+  sesión. Vuelve a pegar las cookies una vez actualizada la app.
+- La barra de estado inferior deja de aparecer en Ajustes: es parte de la
+  vista Spotify (búsqueda, cola y descargas).
+
+## v0.8 — Estándar visual 40/14/64
+
+- Adopta la convergencia M3 / Carbon / Fluent: controles, inputs y
+  botones a 40; texto 14/12; headers de card a 40; filas/tiles a 64.
+- Reemplaza las métricas de v0.7 (48/36/860) por 40/14/64, status bar 32
+  y apilado bajo 820 con reparto 1:1.
+- Top bar 48, status bar 32, sidebar 256; página 24 y bloque 16.
+- Buscador y botón Buscar con altura exacta de 40; foco y estados
+  deshabilitados explícitos.
+- Vacíos verticales idénticos (tile 48) en tabla y cola; cola 320/360.
+- Barra de estado según vista ("Listo para buscar" / "Sesión y ajustes");
+  los estados globales de búsqueda y descarga tienen prioridad.
+- Copy con `…`, datos largos truncados con tooltip y labels sin recortar.
+- Contrato visual v2 en `docs/reglas-ui.md`; auditoría reducida a
+  pendientes y excepciones.
+
+## v0.7 — Autenticación anti-bot + accesibilidad UI
+
+- Ajustes con login de YouTube, pegado de cookies (solo necesarias,
+  cifradas) y verificación de vigencia con indicador.
+- Cadena por descarga: guardadas → plano, con último uso visible.
+- Consola de sesión con exportación a novahd-YYYYMMDD.log.
+- Requiere Developer Mode (plugins nativos).
 - Rampa de texto AA: `fgMid` para secundarios/caps y variantes
   `greenText`/`blueText`/`redText`; botón primario `#7FA3CC`
   con texto oscuro (6.4:1).
 - Foco visible por teclado + `Semantics`/live regions en errores,
   progreso de cola y estados; iconos decorativos excluidos.
 - Errores de búsqueda y guardado de cookies con Reintentar, foco
-  automático y mensaje inline persistente.
+  automático y mensaje inline (el veredicto se oculta a los 5s).
 - Tabla sin clic en fila (acción solo en Descargar); headers con
   ellipsis; targets de icon-only a 32px.
 - Botón Buscar con texto a 48px; tiles azules en estados vacíos;
   badges "Pronto"; status bar 36px con punto-anillo; tildes en copias.
+- Ajustes con flujo ordenado (pasos → acción), cards con header
+  full-bleed, campo de cookies con label y Paso 3; login en rojo
+  de marca con texto negro.
 - Ventana con tamaño inicial y mínimo según escala del display
   (100/125/150/200%) vía `window_manager` + `screen_retriever`.
 - Cola apilada bajo 860px de contenido en ventanas angostas.
 
-## v0.7 (en curso) - Autenticacion anti-bot
-
-- Ajustes con login de YouTube, pegado de cookies (solo necesarias,
-  cifradas) y verificacion de vigencia con indicador.
-- Cadena por descarga: guardadas -> plano, con ultimo uso visible.
-- Consola de sesion con exportar a novahd-YYYYMMDD.log.
-- Requiere Developer Mode (plugins nativos).
-
-## v0.6 (en curso) — Arquitectura limpia
+## v0.6 — Arquitectura limpia
 
 - `YtDlpEngine` extraído: motor yt-dlp reutilizable sin UI.
 - `MusicSearchService` (antes `SpotifyService`): fuera Spotify API.

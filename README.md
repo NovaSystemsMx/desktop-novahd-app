@@ -1,4 +1,4 @@
-# Nova Hub Downloader — v0.5 (Windows + Flutter)
+# Nova Hub Downloader — v0.9 (Windows + Flutter)
 
 Downloader de escritorio para Windows. Módulo actual: **Spotify**
 (búsqueda y metadatos vía YouTube Music, réplica del pipeline Python
@@ -10,8 +10,8 @@ Downloader de escritorio para Windows. Módulo actual: **Spotify**
   Deezer como "Pronto".
 - Buscador con tabla de resultados (portada, título/artista, álbum,
   duración, acción con header fijo) y cola de descargas lateral con
-  progreso real, iconos con tooltip y ruta destino como pie.
-- Barra de estado persistente (36px): refleja búsquedas, cola y avisos
+  progreso real, iconos con tooltip y ruta destino cuando hay descargas.
+- Barra de estado persistente (32px): refleja búsquedas, cola y avisos
   ("Agregado a la cola") sin popups.
 - Ventana con tamaño inicial y mínimo según la escala del display
   (100/125/150/200%), recortada al área visible y centrada
@@ -72,64 +72,73 @@ flutter build windows --debug   # exe en build\windows\x64\runner\Debug\
 ```
 lib/
   main.dart
-  app.dart                        # shell: sidebar + vista + status bar
-  theme/one_dark_pro.dart         # paleta + primario azul #5F7EA6 + AppText
+  app.dart                        # shell: sidebar + vista + status bar (Spotify)
+  theme/one_dark_pro.dart         # paleta + tema M3 + escala AppText
+  theme/ui_tokens.dart            # espacio, tamaño, radio y breakpoints
   config/app_config.dart          # tiempos, topes y calidades centrales
   models/track.dart               # pista + copyWith + safeFileName
   models/download_task.dart       # tarea de cola + estados
-  services/music_search_service.dart # busqueda + estado global
-  services/ytmusic_service.dart   # replica ytmusicapi (search/continuations/player)
+  services/music_search_service.dart # búsqueda + estado global
+  services/ytmusic_service.dart   # réplica ytmusicapi (search/continuations/player)
   services/downloader_service.dart# cola + reintentos + etiquetado + avisos
   services/yt_dlp_engine.dart   # motor yt-dlp reutilizable (audio/JSON/procesos)
-  services/app_log.dart           # bitacora de sesion ([Fuente] HH:MM:SS)
+  services/app_log.dart           # bitácora de sesión ([Fuente] HH:MM:SS)
   services/audio_tagger.dart      # ID3v2.3 (equivale a mutagen)
   services/auth_store.dart        # cookies cifradas + vigencia (sin archivos)
   services/binaries.dart          # localiza yt-dlp/ffmpeg
   widgets/sidebar.dart
   widgets/results_table.dart      # header fijo + scroll + pill "En cola";
-                                  # accion solo en boton Descargar (sin clic en fila)
-  widgets/download_queue_panel.dart # cola de descargas + pie con ruta
-  widgets/empty_icon_tile.dart    # tile azul para estados vacios
-  widgets/status_bar.dart         # barra de estado 36px + avisos
+                                  # acción solo en botón Descargar (sin clic en fila)
+  widgets/download_queue_panel.dart # cola de descargas + ruta si hay tareas
+  widgets/empty_icon_tile.dart    # tile azul para estados vacíos
+  widgets/status_bar.dart         # barra de estado 32px (solo Spotify) + avisos
   views/spotify_view.dart
-  views/settings_view.dart        # ajustes: auth, consola, configuracion
+  views/settings_view.dart        # ajustes: auth, consola, configuración
 tool/
-  ytm_check.dart   # verifica busqueda YTM en vivo
-  ytm_shape.dart   # diagnostico de formas de respuesta YTM
+  ytm_check.dart   # verifica búsqueda YTM en vivo
+  ytm_shape.dart   # diagnóstico de formas de respuesta YTM
   tag_check.dart   # verifica etiquetado ID3 en un MP3 real
   emoji_check.dart # verifica safeFileName (ilegales y emojis)
   engine_check.dart # verifica motor yt-dlp reutilizable
 docs/
-  AUDITORIA_BETA.md    # auditoria pre-beta (producto)
-windows/runner/   # titulo nativo "Nova Hub Downloader"
+  reglas-ui.md                    # contrato visual 40/14/64
+  auditoria-consistencia-vistas.md # pendientes y excepciones de UI
+  AUDITORIA_BETA.md               # auditoría pre-beta (producto)
+windows/runner/   # título nativo "Nova Hub Downloader"
 ```
 
 ## Sistema visual
 
-Paleta One Dark Pro en 18 colores (`lib/theme/one_dark_pro.dart`):
+Paleta One Dark Pro en 19 colores (`lib/theme/one_dark_pro.dart`):
 13 base (6 fondos/grises + blanco, primario azul `#5F7EA6`,
 verde/amarillo/rojo de estados) + rampa de texto AA: `fgMid`
 `#9AA0AB` para secundarios y etiquetas, variantes `greenText` /
-`blueText` / `redText` para texto en color, y botón primario
-`#7FA3CC` con texto oscuro (6.4:1). Sin colores por plataforma.
+`blueText` / `redText` para texto en color, botón primario
+`#7FA3CC` con texto oscuro (6.4:1) y botón de marca `buttonRed`
+`#AB646A` con texto negro (4.8:1). Sin colores por plataforma.
 
-Escala tipográfica única (`AppText`, misma familia base):
+Escala tipográfica única (`AppText`, 9 estilos, familia Segoe UI):
 
 | Nivel | Uso |
 |---|---|
-| `hero` 18/w800 | título principal de vista |
-| `title` 13.5/w600 | canciones, items, títulos de panel |
-| `body` 12 | texto funcional (botones, álbumes) |
-| `secondary` 12.5 | artistas, hints, mensajes |
-| `caps` 11/w700 + tracking | headers, badges, secciones |
-| `input` 14 | campo de búsqueda |
+| `hero` 20/w700 | título principal de vista |
+| `brand` 14/w800 | wordmark de la marca |
+| `title` 14/w600 | canciones, ítems, títulos de panel |
+| `body` / `input` 14 | texto funcional y campo de búsqueda |
+| `secondary` / `caption` 12 | artistas, pistas, mensajes, status |
+| `caps` 12/w600 + tracking | headers, badges, secciones |
+| `mono` 12 | consola y visor de cookies |
 
-Accesibilidad (desktop): anillo de foco visible por teclado,
-`Semantics` con live regions en errores y progreso, iconos
-decorativos excluidos del árbol, tooltips en botones icon-only.
-Errores de búsqueda y guardado con botón Reintentar, foco automático
-y mensaje inline persistente; layout responsive (cola apilada bajo
-860px de contenido).
+Controles a 40, headers de card a 40, filas/tiles a 64, top bar 48,
+status bar 32 (solo Spotify) y sidebar 256. Cola de 320/360; layout
+responsive con apilado bajo 820px de contenido y reparto 1:1.
+
+Accesibilidad (desktop): foco por teclado, `Semantics` con live
+regions en errores y progreso, iconos decorativos excluidos del árbol,
+tooltips en botones icon-only. Errores de búsqueda y guardado con botón
+Reintentar, foco automático y mensaje inline persistente. Los pendientes
+de hover/focus y contraste sobre `cardHover` están en
+`docs/auditoria-consistencia-vistas.md`.
 
 ## Notas
 
