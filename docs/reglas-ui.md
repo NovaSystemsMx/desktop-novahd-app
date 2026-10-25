@@ -1,6 +1,6 @@
 # Reglas de UI — contrato para agentes
 
-Versión 2 · 2026-10-24 · Nova Hub Downloader v0.8
+Versión 2 · 2026-10-25 · Nova Hub Downloader v0.9
 
 Base: convergencia de **Material 3 (40)**, **Carbon md (40)** y **Fluent
 large (40)**, sobre retícula de 4/8. Controles de 40, cuerpo 14, caption 12
@@ -43,7 +43,7 @@ ratio de contraste documentado. Un tamaño nuevo no se escribe con
 
 | Origen | Qué significa | Ejemplos |
 |---|---|---|
-| **A. Ya coincide** | ambas vistas ya lo hacen igual; se congela | card radio 12 y header 40; inputs/body 14; controles a 40; paleta; top bar 48 y status bar 32 |
+| **A. Ya coincide** | ambas vistas ya lo hacen igual; se congela | card radio 12 y header 40; inputs/body 14; controles a 40; paleta; top bar 48 (status bar 32 en Spotify) |
 | **B. Se elige una** | las vistas difieren; se adopta la que mejor funciona | header a 16; vacío 48/16; gap de bloque 16; icono de botón 16; radio de control 8; fila de dos líneas 64 |
 | **C. Decisión nueva** | no existía en ninguna; se define ahora | cola 320/360; tabla de alphas; label `CANCIÓN`; sin punto en el sidebar; status por vista; wordmark `brand` |
 | **D. Restricción externa** | la impone el SDK o la accesibilidad | AA 4.5:1; tooltips de M3; Segoe UI; `height` de Flutter |
@@ -142,6 +142,8 @@ la vista.
 | `iconTileSidebar` | 18 | logo y plataformas del sidebar |
 | `iconTileView` | 20 | tile de cabecera de vista |
 | `iconTileEmpty` | 24 | tile de vacío |
+| `iconStatusBadge` | 16 | disco de la insignia de estado completada |
+| `iconStatusCheck` | 12 | check dentro de la insignia de estado |
 
 ### 2.5 Tipografía (`AppText`)
 
@@ -477,9 +479,18 @@ Center(
 - Header 40: título `caps` truncable, contador en badge propio **no
   truncable**, acciones 16/hit 32, padding 16/4/16/4.
 - Tile 64, padding 12/12; título `title`, mensaje `secondary`, gap 2.
+- Borde en `foregroundDecoration`: dentro del layout restaría 2 px al
+  alto útil (38) y las dos líneas desbordarían. El tile conserva 40 útiles.
 - Progreso 3 px **en el borde inferior** del tile (Stack), no en el flujo:
-  así el tile conserva 64 con título + mensaje.
+  así el tile conserva 64 con título + mensaje. Solo se pinta mientras el
+  estado es `downloading`; en cola/completado/error no hay barra.
+- Semántica del progreso: `label` con título/mensaje y `value` numérico
+  (`42%`); Flutter valida el rol `progressBar` y rechaza texto libre.
 - Acción 16/hit 32; reintentar solo en error; quitar siempre.
+- Estado completado: insignia dibujada (disco 16 dentro de la caja de 18
+  + check 12 en `darker`), **no** el glifo `check_circle_rounded`: a 125%
+  el disco mide 22.5 px y el hinting del glifo aplana su base en una línea
+  dura, así que el icono se ve cortado por abajo.
 - Vacío: receta 3.7. Footer (ruta `caption` con ellipsis + tooltip) **solo
   si hay tareas**; en vacío se oculta para no desbordar a 1100×630.
 - El contador no se trunca: va en un `Text`/badge separado del título.
@@ -527,9 +538,10 @@ Si un widget nuevo trae un default de M3, **primero** se fija en el tema.
 - Un verbo por acción; el botón dice exactamente lo que hace (si solo
   abre el navegador, no se llama “Iniciar sesión”).
 - Sin `\n` manuales en textos que pueden envolver.
-- El status bar habla de la vista activa: `Listo para buscar` en Spotify;
-  `Sesión y ajustes` en Ajustes (los estados de descarga/búsqueda siguen
-  siendo globales).
+- El status bar es exclusivo de la vista Spotify: en reposo dice
+  `Listo para buscar` y, con prioridad, muestra los estados globales de
+  búsqueda y descarga. Ajustes no lo muestra (su chrome termina en la
+  top bar).
 - Un mismo concepto, una misma palabra (`canción`, no `tema`/`pista`).
 
 ### 4.1 Texto largo y truncado

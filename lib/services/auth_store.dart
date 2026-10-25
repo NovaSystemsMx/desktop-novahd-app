@@ -28,22 +28,45 @@ class AuthStore extends ChangeNotifier {
   Future<String?> readStoredCookies() =>
       storage.read(key: _cookiesKey);
 
+  /// Las exportaciones de navegador marcan las cookies HttpOnly con este
+  /// prefijo, y ahi van justo las de sesion (SID, HSID, __Secure-*).
+  static const _httpOnlyPrefix = '#HttpOnly_';
+
+  /// Primera linea obligatoria del formato Netscape: sin ella yt-dlp
+  /// rechaza el archivo ("does not look like a Netscape format").
+  static const _netscapeHeader = '# Netscape HTTP Cookie File';
+
+  /// Columnas de una linea Netscape, o `null` si es comentario/vacia.
+  /// Acepta el prefijo `#HttpOnly_` (se descarta: el formato Netscape
+  /// solo usa las 7 columnas tabuladas).
+  static List<String>? _columns(String line) {
+    var t = line.trim();
+    if (t.startsWith(_httpOnlyPrefix)) {
+      t = t.substring(_httpOnlyPrefix.length);
+    } else if (t.isEmpty || t.startsWith('#')) {
+      return null;
+    }
+    return t.split('\t');
+  }
+
   /// Numero de cookies guardadas (para mostrar el filtrado).
   Future<int> storedCount() async {
     final text = await storage.read(key: _cookiesKey);
     if (text == null || text.isEmpty) return 0;
     return text
         .split('\n')
-        .map((l) => l.trim())
-        .where((l) => l.isNotEmpty && !l.startsWith('#') )
+        .where((l) => _columns(l) != null)
         .length;
   }
   /// Nombres que yt-dlp necesita (sesion + preferencias). Todo lo
   /// demas (analitica, rollout, tokens de sesion unica) se descarta.
+  /// Incluye los `*PSIDTS`: YouTube rota el token y sin ellos la sesion
+  /// se considera invalida aunque el resto de cookies este vigente.
   static const neededCookies = {
     'SID', 'HSID', 'SSID', 'APISID', 'SAPISID', 'LOGIN_INFO', 'PREF', 'YSC',
     'SIDCC', 'VISITOR_INFO1_LIVE', '__Secure-1PSID', '__Secure-3PSID',
     '__Secure-1PAPISID', '__Secure-3PAPISID', '__Secure-1PSIDCC', '__Secure-3PSIDCC',
+    '__Secure-1PSIDTS', '__Secure-3PSIDTS',
   };
 
   /// Guarda solo las cookies necesarias. Devuelve (guardadas, pegadas).
@@ -54,14 +77,15 @@ class AuthStore extends ChangeNotifier {
     final kept = <String>[];
     var total = 0;
     for (final raw in cleaned.split('\n')) {
-      final l = raw.trim();
-      if (l.isEmpty || l.startsWith('#') ) continue;
-      final cols = l.split('\t');
+      final cols = _columns(raw);
+      if (cols == null) continue;
       if (cols.length < 6) {
         throw Exception('Formato invalido: se espera Netscape (tabulado).');
       }
       total++;
-      if (neededCookies.contains(cols[5])) kept.add(l);
+      // Se guarda la fila normalizada (sin `#HttpOnly_`) para que el
+      // conteo, la cabecera y las expiraciones la lean igual.
+      if (neededCookies.contains(cols[5])) kept.add(cols.join('\t'));
     }
     if (kept.isEmpty) throw Exception('Ninguna cookie util encontrada.');
     await storage.write(key: _cookiesKey, value: kept.join('\n'));
@@ -76,14 +100,18 @@ class AuthStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Materializa las cookies a un temporal para `--cookiefile`.
+  /// Materializa las cookies a un temporal para `--cookies`.
+  /// Escribe el encabezado Netscape: yt-dlp rechaza el archivo sin el.
   /// El llamador debe borrarlo con [discardCookieFile].
   Future<File?> materializeCookieFile() async {
     final text = await storage.read(key: _cookiesKey);
     if (text == null || text.isEmpty) return null;
     final dir = await Directory.systemTemp.createTemp('novahd_cookies');
     final file = File('${dir.path}\\cookies.txt');
-    await file.writeAsString(text, flush: true);
+    await file.writeAsString(
+      '$_netscapeHeader\n\n$text\n',
+      flush: true,
+    );
     return file;
   }
 
@@ -100,9 +128,8 @@ class AuthStore extends ChangeNotifier {
   static String cookieHeader(String text) {
     final pairs = <String>[];
     for (final line in text.split('\n')) {
-      final t = line.trim();
-      if (t.isEmpty || t.startsWith('#')) continue;
-      final cols = t.split('\t');
+      final cols = _columns(line);
+      if (cols == null) continue;
       if (cols.length >= 7 && cols[5].isNotEmpty) {
         pairs.add('${cols[5]}=${cols[6]}');
       }
@@ -116,9 +143,8 @@ class AuthStore extends ChangeNotifier {
     if (text == null || text.isEmpty) return null;
     var max = 0;
     for (final line in text.split('\n')) {
-      final t = line.trim();
-      if (t.isEmpty || t.startsWith('#')) continue;
-      final cols = t.split('\t');
+      final cols = _columns(line);
+      if (cols == null) continue;
       if (cols.length >= 7) {
         final exp = int.tryParse(cols[4].trim()) ?? 0;
         if (exp > max) max = exp;
@@ -142,9 +168,8 @@ class AuthStore extends ChangeNotifier {
     var maxExp = 0;
     var rows = 0;
     for (final line in text.split('\n')) {
-      final t = line.trim();
-      if (t.isEmpty || t.startsWith('#') ) continue;
-      final cols = t.split('\t');
+      final cols = _columns(line);
+      if (cols == null) continue;
       if (cols.length < 7) {
         return (ok: false, detail: 'Formato invalido en una linea.');
       }

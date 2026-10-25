@@ -5,15 +5,11 @@ import '../services/downloader_service.dart';
 import '../services/music_search_service.dart';
 import '../theme/one_dark_pro.dart';
 import '../theme/ui_tokens.dart';
-import 'sidebar.dart';
 
-/// Barra de estado inferior persistente (patrón desktop clásico).
-/// Refleja búsquedas y descargas en tiempo real.
+/// Barra de estado inferior de Spotify (patrón desktop clásico).
+/// Refleja búsquedas y descargas en tiempo real. Ajustes no la usa.
 class StatusBar extends StatelessWidget {
-  /// Vista activa: el estado de reposo es distinto en Spotify y Ajustes.
-  final PlatformTab tab;
-
-  const StatusBar({super.key, required this.tab});
+  const StatusBar({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -62,9 +58,7 @@ class StatusBar extends StatelessWidget {
               : '$completed archivos descargados';
           dot = OneDarkPro.green;
         } else {
-          text = tab == PlatformTab.settings
-              ? 'Sesión y ajustes'
-              : 'Listo para buscar';
+          text = 'Listo para buscar';
           dot = OneDarkPro.blue;
         }
 

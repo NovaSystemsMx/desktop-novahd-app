@@ -93,6 +93,11 @@ Estándar vigente: **40/14/64** (M3 40 · Carbon md 40 · Fluent large 40). Ver 
 - Fase 3 hecha: las dos vistas usan `UiTokens`/`AppText` y el estándar
   40/14/64. Fase 4 (widgets compartidos `ViewHeader`, `CardShell`,
   `PrimaryButton`, `EmptyState`) y fase 5 (test de contrato) pendientes.
+- v0.9: tile de cola corregido (borde en `foregroundDecoration`;
+  64 de caja con 40 útiles), insignia de completado vectorial, status bar
+  solo en Spotify y descarga con cookies arreglada (`--cookies` + cabecera
+  Netscape + filas `#HttpOnly_`). Hover/focus (P1) y contraste
+  `cardHover` (P2) siguen abiertos.
 - La consola conserva `yellow` como texto por la excepción E7; no añadir
   más usos.
 - No hacer `git add` / `git commit` sin pedido explícito.

@@ -268,7 +268,7 @@ class DownloaderService extends ChangeNotifier {
           audioQuality: AppConfig.audioQuality,
           extraArgs: [
             ...baseArgs,
-            if (stored) ...['--cookiefile', cookieFile!.path],
+            if (stored) ...['--cookies', cookieFile!.path],
           ],
           onProgress: (p) {
             task.progress = p;
@@ -282,6 +282,13 @@ class DownloaderService extends ChangeNotifier {
 
       var exit = await attempt(const [], stored: useStored);
       if (exit != 0 && useStored) {
+        // Sin este rastro, el reintento sin auth puede funcionar y ocultar
+        // el motivo real (cookies rechazadas, expiradas o formato invalido).
+        AppLog.instance.warning(
+          'Descarga',
+          'Cookies rechazadas (${task.track.safeFileName}): '
+          '${_stderrExcerpt()}',
+        );
         // Contingencia: una vez sin auth.
         task.message = 'Reintentando sin auth…';
         task.progress = 0;
@@ -333,6 +340,13 @@ class DownloaderService extends ChangeNotifier {
     task.status = DownloadStatus.completed;
     task.message = 'Completado';
     notifyListeners();
+  }
+
+  /// Extracto de una linea del stderr de yt-dlp (acotado) para la consola.
+  String _stderrExcerpt() {
+    final text = engine.lastStderr.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (text.isEmpty) return 'sin detalle.';
+    return text.length <= 300 ? text : text.substring(text.length - 300);
   }
 
   Future<File> _safeRename(File src, String destPath) async {

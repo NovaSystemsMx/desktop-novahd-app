@@ -186,24 +186,36 @@ class _QueueTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dl = context.read<DownloaderService>();
-    Color statusColor;
-    IconData statusIcon;
+    final Color statusColor;
+    final Widget statusGlyph;
     switch (task.status) {
       case DownloadStatus.queued:
         statusColor = OneDarkPro.yellow;
-        statusIcon = Icons.schedule_rounded;
+        statusGlyph = Icon(
+          Icons.schedule_rounded,
+          color: statusColor,
+          size: UiTokens.iconTileSidebar,
+        );
         break;
       case DownloadStatus.downloading:
         statusColor = OneDarkPro.blueText;
-        statusIcon = Icons.downloading_rounded;
+        statusGlyph = Icon(
+          Icons.downloading_rounded,
+          color: statusColor,
+          size: UiTokens.iconTileSidebar,
+        );
         break;
       case DownloadStatus.completed:
         statusColor = OneDarkPro.greenText;
-        statusIcon = Icons.check_circle_rounded;
+        statusGlyph = _CompletedBadge(color: statusColor);
         break;
       case DownloadStatus.failed:
         statusColor = OneDarkPro.redText;
-        statusIcon = Icons.error_outline_rounded;
+        statusGlyph = Icon(
+          Icons.error_outline_rounded,
+          color: statusColor,
+          size: UiTokens.iconTileSidebar,
+        );
         break;
     }
 
@@ -220,17 +232,17 @@ class _QueueTile extends StatelessWidget {
             decoration: BoxDecoration(
               color: OneDarkPro.darker,
               borderRadius: BorderRadius.circular(UiTokens.radiusControl),
+            ),
+            // El borde va en primer plano: dentro del layout consumiría
+            // 2 px del alto útil (64 - 24 - 2 = 38) y las dos líneas
+            // de texto desbordarían. Así el tile conserva 64 y 40 útiles.
+            foregroundDecoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(UiTokens.radiusControl),
               border: Border.all(color: OneDarkPro.border),
             ),
             child: Row(
               children: [
-                ExcludeSemantics(
-                  child: Icon(
-                    statusIcon,
-                    color: statusColor,
-                    size: UiTokens.iconTileSidebar,
-                  ),
-                ),
+                ExcludeSemantics(child: statusGlyph),
                 const SizedBox(width: UiTokens.spaceInline),
                 Expanded(
                   child: Column(
@@ -308,11 +320,46 @@ class _QueueTile extends StatelessWidget {
                 backgroundColor: OneDarkPro.border,
                 valueColor: AlwaysStoppedAnimation<Color>(statusColor),
                 semanticsLabel: '${task.track.title}: ${task.message}',
+                // Flutter exige un número o un porcentaje válido para el
+                // rol de barra de progreso del árbol de accesibilidad.
                 semanticsValue:
-                    '${(task.progress.clamp(0, 1) * 100).round()} por ciento',
+                    '${(task.progress.clamp(0, 1) * 100).round()}%',
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Insignia de "completado": disco vectorial con check, no glifo.
+///
+/// El glifo `check_circle_rounded` se rasteriza con hinting; a 125% el
+/// disco mide 22.5 px y su base se aplana en una línea dura, así que se
+/// ve cortado por abajo. Un `BoxDecoration` circular no pasa por hinting
+/// y se mantiene redondo en cualquier escala.
+class _CompletedBadge extends StatelessWidget {
+  const _CompletedBadge({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: UiTokens.iconTileSidebar,
+      height: UiTokens.iconTileSidebar,
+      child: Center(
+        child: Container(
+          width: UiTokens.iconStatusBadge,
+          height: UiTokens.iconStatusBadge,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          child: const Icon(
+            Icons.check_rounded,
+            size: UiTokens.iconStatusCheck,
+            color: OneDarkPro.darker,
+          ),
+        ),
       ),
     );
   }

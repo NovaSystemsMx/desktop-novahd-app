@@ -52,7 +52,7 @@ class _NovadhAppShellState extends State<NovadhAppShell> {
                       const SizedBox(width: UiTokens.spaceInline),
                       Expanded(
                         child: Text(
-                          'Nova Hub Downloader — Windows v0.8',
+                          'Nova Hub Downloader — Windows v0.9',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppText.caption,
@@ -66,7 +66,9 @@ class _NovadhAppShellState extends State<NovadhAppShell> {
                       ? const SettingsView()
                       : const SpotifyView(),
                 ),
-                StatusBar(tab: _tab),
+                // La barra de estado pertenece a Spotify (búsqueda y cola).
+                // Ajustes no la muestra: su chrome termina en la top bar.
+                if (_tab == PlatformTab.spotify) const StatusBar(),
               ],
             ),
           ),

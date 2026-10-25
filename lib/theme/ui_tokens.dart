@@ -136,6 +136,10 @@ abstract final class UiTokens {
   static const double iconTileSidebar = 18;
   static const double iconTileView = 20;
   static const double iconTileEmpty = 24;
+  /// Disco de la insignia de estado completada (dentro de la caja de 18).
+  static const double iconStatusBadge = 16;
+  /// Check interior de la insignia de estado completada.
+  static const double iconStatusCheck = 12;
 
   // ── Radios ───────────────────────────────────────────────────────────
 

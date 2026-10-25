@@ -1,5 +1,23 @@
 # CHANGELOG - Nova Hub Downloader
 
+## v0.9 — Correcciones de layout y descargas
+
+- Corrige el desbordamiento de 1 px en los tiles de la cola: el borde
+  pasa a `foregroundDecoration` y deja de consumir los 40 px útiles
+  del tile de 64.
+- Corrige el valor de accesibilidad de la barra de progreso para que use
+  un porcentaje válido (`42%`) en lugar de texto libre.
+- La insignia de "completado" pasa de glifo a disco vectorial con check:
+  a 125% el hinting del glifo aplanaba la base del círculo y el icono se
+  veía cortado por abajo.
+- Arregla la descarga autenticada: yt-dlp recibía el flag inexistente
+  `--cookiefile` (fallaba al instante y la cola caía a "sin auth"), el
+  temporal se escribía sin la cabecera Netscape y al guardar se
+  descartaban las cookies HttpOnly (`#HttpOnly_`), que son justo las de
+  sesión. Vuelve a pegar las cookies una vez actualizada la app.
+- La barra de estado inferior deja de aparecer en Ajustes: es parte de la
+  vista Spotify (búsqueda, cola y descargas).
+
 ## v0.8 — Estándar visual 40/14/64
 
 - Adopta la convergencia M3 / Carbon / Fluent: controles, inputs y

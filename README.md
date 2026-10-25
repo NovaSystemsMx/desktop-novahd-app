@@ -1,4 +1,4 @@
-# Nova Hub Downloader — v0.8 (Windows + Flutter)
+# Nova Hub Downloader — v0.9 (Windows + Flutter)
 
 Downloader de escritorio para Windows. Módulo actual: **Spotify**
 (búsqueda y metadatos vía YouTube Music, réplica del pipeline Python
@@ -72,7 +72,7 @@ flutter build windows --debug   # exe en build\windows\x64\runner\Debug\
 ```
 lib/
   main.dart
-  app.dart                        # shell: sidebar + vista + status bar
+  app.dart                        # shell: sidebar + vista + status bar (Spotify)
   theme/one_dark_pro.dart         # paleta + tema M3 + escala AppText
   theme/ui_tokens.dart            # espacio, tamaño, radio y breakpoints
   config/app_config.dart          # tiempos, topes y calidades centrales
@@ -91,7 +91,7 @@ lib/
                                   # acción solo en botón Descargar (sin clic en fila)
   widgets/download_queue_panel.dart # cola de descargas + ruta si hay tareas
   widgets/empty_icon_tile.dart    # tile azul para estados vacíos
-  widgets/status_bar.dart         # barra de estado 32px + avisos
+  widgets/status_bar.dart         # barra de estado 32px (solo Spotify) + avisos
   views/spotify_view.dart
   views/settings_view.dart        # ajustes: auth, consola, configuración
 tool/
@@ -130,8 +130,8 @@ Escala tipográfica única (`AppText`, 9 estilos, familia Segoe UI):
 | `mono` 12 | consola y visor de cookies |
 
 Controles a 40, headers de card a 40, filas/tiles a 64, top bar 48,
-status bar 32 y sidebar 256. Cola de 320/360; layout responsive con
-apilado bajo 820px de contenido y reparto 1:1.
+status bar 32 (solo Spotify) y sidebar 256. Cola de 320/360; layout
+responsive con apilado bajo 820px de contenido y reparto 1:1.
 
 Accesibilidad (desktop): foco por teclado, `Semantics` con live
 regions en errores y progreso, iconos decorativos excluidos del árbol,

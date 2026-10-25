@@ -1,6 +1,6 @@
 # Auditoría de consistencia visual — pendientes y excepciones
 
-Fecha: 2026-10-24 · App: Nova Hub Downloader v0.8 (Windows/Flutter)
+Fecha: 2026-10-25 · App: Nova Hub Downloader v0.9 (Windows/Flutter)
 Contrato vigente: 40/14/64 (`docs/reglas-ui.md`)
 
 > Documento reducido: los hallazgos A–I ya aplicados se eliminaron.
@@ -40,5 +40,6 @@ No queda ningún hallazgo A–I pendiente de aplicación.
 ### G3 — Top bar 48 / status bar 32
 
 - Se mantiene la asimetría de chrome: top bar 48, status bar 32.
+- El status bar es exclusivo de Spotify; Ajustes solo lleva top bar.
 - Es una decisión de producto, no un pendiente.
 - Archivos: `lib/app.dart`, `lib/widgets/status_bar.dart`.
