@@ -301,12 +301,16 @@ class _SettingsViewState extends State<SettingsView> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: OneDarkPro.buttonRed,
                           foregroundColor: OneDarkPro.darker,
+                        ).copyWith(
+                          // Conserva el hover aclarado del tema aunque el
+                          // botón fije su propio fondo de marca.
+                          overlayColor: primaryButtonHoverOverlay,
                         ),
                         icon: const Icon(
                           Icons.play_circle_fill_rounded,
                           size: UiTokens.iconButton,
                         ),
-                        label: const Text('Abrir YouTube para iniciar sesión'),
+                        label: const Text('Abrir YouTube'),
                       ),
                     ),
                     const SizedBox(height: UiTokens.spaceInline),
@@ -391,7 +395,7 @@ class _SettingsViewState extends State<SettingsView> {
                             Icons.save_rounded,
                             size: UiTokens.iconButton,
                           ),
-                          label: const Text('Guardar cookies'),
+                          label: const Text('Guardar'),
                         ),
                         OutlinedButton.icon(
                           onPressed: auth.hasStoredCookies

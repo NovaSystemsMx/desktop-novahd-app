@@ -40,6 +40,33 @@ abstract class OneDarkPro {
   static const buttonRed = Color(0xFFAB646A);
 }
 
+/// Overlay de hover explícito para botones.
+///
+/// `styleFrom` deriva el overlay del `foregroundColor` al 8 %, que sobre un
+/// relleno sólido es casi invisible (el problema reportado). Aquí solo se
+/// fija el estado hover; pressed y focus resuelven `null` y caen en
+/// `highlightColor` / `focusColor` del tema (ambos con alfa aprobado).
+///
+/// Público para que los botones con estilo propio (login de YouTube,
+/// Ajustes activo) no pierdan el hover del tema al pasar `styleFrom`.
+WidgetStateProperty<Color?> buttonHoverOverlay(Color color) {
+  return WidgetStateProperty.resolveWith<Color?>((states) {
+    if (states.contains(WidgetState.pressed)) return null;
+    if (states.contains(WidgetState.hovered)) return color;
+    return null;
+  });
+}
+
+/// Hover de botón primario: aclara el relleno con `white` al 15 % (alfa
+/// aprobado). El label `darker` sube a 7.0:1 en azul y 4.6:1 en marca.
+WidgetStateProperty<Color?> get primaryButtonHoverOverlay =>
+    buttonHoverOverlay(OneDarkPro.white.withValues(alpha: 0.15));
+
+/// Hover de botón sin relleno (outlined, text, icono): `cardHover`, el
+/// mismo token que el hover de card/ítem.
+WidgetStateProperty<Color?> get plainButtonHoverOverlay =>
+    buttonHoverOverlay(OneDarkPro.cardHover);
+
 /// Tema alineado con la convergencia de Material 3 (40), Carbon md (40)
 /// y Fluent large (40): controles de 40, cuerpo 14, caption 12 y filas de
 /// 64 para dos líneas. Ver `docs/reglas-ui.md` §2 y ADR 18.
@@ -196,6 +223,10 @@ ThemeData buildNovadhTheme() {
         textStyle: AppText.body.copyWith(fontWeight: FontWeight.w500),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ).copyWith(
+        // Aclara el relleno: el label `darker` sube de 6.4:1 a 7.0:1 en
+        // `buttonBlue` y de 3.8:1 a 4.6:1 en `buttonRed`.
+        overlayColor: primaryButtonHoverOverlay,
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
@@ -208,7 +239,7 @@ ThemeData buildNovadhTheme() {
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         side: const BorderSide(color: OneDarkPro.border),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
+      ).copyWith(overlayColor: plainButtonHoverOverlay),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
@@ -219,7 +250,7 @@ ThemeData buildNovadhTheme() {
         textStyle: AppText.body.copyWith(fontWeight: FontWeight.w500),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
+      ).copyWith(overlayColor: plainButtonHoverOverlay),
     ),
     // IconButton de header/acción: 32 reales, sin el padding de 48 de M3.
     iconButtonTheme: IconButtonThemeData(
@@ -227,6 +258,7 @@ ThemeData buildNovadhTheme() {
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         minimumSize: WidgetStateProperty.all(const Size(32, 32)),
         padding: WidgetStateProperty.all(EdgeInsets.zero),
+        overlayColor: plainButtonHoverOverlay,
       ),
     ),
     // M3 pinta los tooltips blancos en oscuro; aquí van al tema.

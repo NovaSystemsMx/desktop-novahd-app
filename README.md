@@ -1,4 +1,4 @@
-# Nova Hub Downloader — v0.9 (Windows + Flutter)
+# Nova Hub Downloader - v0.9.1 (Windows + Flutter)
 
 Downloader de escritorio para Windows. Módulo actual: **Spotify**
 (búsqueda y metadatos vía YouTube Music, réplica del pipeline Python
@@ -10,12 +10,13 @@ Downloader de escritorio para Windows. Módulo actual: **Spotify**
   Deezer como "Pronto".
 - Buscador con tabla de resultados (portada, título/artista, álbum,
   duración, acción con header fijo) y cola de descargas lateral con
-  progreso real, iconos con tooltip y ruta destino cuando hay descargas.
+  progreso real, iconos con tooltip y ruta destino siempre visible.
 - Barra de estado persistente (32px): refleja búsquedas, cola y avisos
   ("Agregado a la cola") sin popups.
-- Ventana con tamaño inicial y mínimo según la escala del display
-  (100/125/150/200%), recortada al área visible y centrada
-  (`window_manager` + `screen_retriever`).
+- Ventana con tamaño inicial de 1200×660 y mínimo plano de 1152×640
+  lógicos, recortada al área visible y centrada (`window_manager` +
+  `screen_retriever`). El mínimo deja el contenido por encima de
+  `stackBelow`, así que la cola no se apila en uso normal.
 - Tema One Dark Pro con azul `#5F7EA6` como color primario; verde,
   amarillo y rojo solo para estados de descarga y errores. Rampa de
   texto AA (`fgMid`, variantes `*Text`, botón `#7FA3CC` con texto
@@ -89,7 +90,7 @@ lib/
   widgets/sidebar.dart
   widgets/results_table.dart      # header fijo + scroll + pill "En cola";
                                   # acción solo en botón Descargar (sin clic en fila)
-  widgets/download_queue_panel.dart # cola de descargas + ruta si hay tareas
+  widgets/download_queue_panel.dart # cola de descargas + ruta destino fija
   widgets/empty_icon_tile.dart    # tile azul para estados vacíos
   widgets/status_bar.dart         # barra de estado 32px (solo Spotify) + avisos
   views/spotify_view.dart
@@ -136,8 +137,10 @@ responsive con apilado bajo 820px de contenido y reparto 1:1.
 Accesibilidad (desktop): foco por teclado, `Semantics` con live
 regions en errores y progreso, iconos decorativos excluidos del árbol,
 tooltips en botones icon-only. Errores de búsqueda y guardado con botón
-Reintentar, foco automático y mensaje inline persistente. Los pendientes
-de hover/focus y contraste sobre `cardHover` están en
+Reintentar, foco automático y mensaje inline persistente. Hover animado
+(160 ms) en filas, ítems del sidebar y botones. Quedan por verificar con
+captura el foco por teclado y el estado pressed; el detalle y las
+mediciones de contraste sobre `cardHover` están en
 `docs/auditoria-consistencia-vistas.md`.
 
 ## Notas

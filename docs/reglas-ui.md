@@ -1,6 +1,6 @@
 # Reglas de UI — contrato para agentes
 
-Versión 2 · 2026-10-25 · Nova Hub Downloader v0.9
+Versión 2 · 2026-11-17 · Nova Hub Downloader v0.9.1
 
 Base: convergencia de **Material 3 (40)**, **Carbon md (40)** y **Fluent
 large (40)**, sobre retícula de 4/8. Controles de 40, cuerpo 14, caption 12
@@ -132,6 +132,13 @@ en un rol, se discute y se añade el token; no se escribe el número.
 El tooltip usa radio 6 y el diálogo 12; ambos se fijan en el tema, no en
 la vista.
 
+**Movimiento.** `motionHover` (160 ms, `Curves.easeOut`) es la única
+transición de color admitida: se usa para el fundido del hover (fila de
+tabla e ítem del sidebar) vía `AnimatedContainer`. La curva arranca rápido
+y frena suave, de modo que el resaltado sigue al puntero sin sentirse
+instantáneo ni arrastrado. No se anima el layout ni se escriben `Duration`
+o `Curve` sueltos en vistas o widgets.
+
 ### 2.4 Iconos
 
 | Token | Valor | Elemento |
@@ -219,7 +226,7 @@ Variantes alfa aprobadas (siempre sobre un token de la paleta):
 |---:|---|
 | 0.10 | fondo del banner de error (`red`) |
 | 0.12 | fondo de “en cola” / highlight (`blue`, `blueText`) |
-| 0.15 | fondo de tile decorativo (`blue`) |
+| 0.15 | fondo de tile decorativo (`blue`); hover de botón primario (`white`) |
 | 0.22 | anillo de foco (`blueText`) |
 | 0.40 | borde de marca / error (`blue`, `red`) |
 | 0.45 | borde de ítem activo / punto de estado (`blue`) |
@@ -239,12 +246,17 @@ el de la ventana. Usar `LayoutBuilder`, no `MediaQuery.size`.
 | `queueNarrow` | 320 | cola entre 820 y 1000 |
 | `queueWide` | 360 | cola desde 1000 |
 
-Al apilar, la tabla y la cola se reparten con `Expanded(flex: 1)` y
-`Expanded(flex: 1)`; nunca una cola de alto fijo que ahogue la tabla. El
-reparto 3:2 se probó a 1100×630 y desbordaba el vacío de la cola; 1:1
-deja 168 lógicos para cada panel, suficiente para el vacío compacto.
-Por encima de 820 el peor caso es tabla ≈ 484 y cola 320: con `CANCIÓN` y
-acción 128 la tabla sigue siendo legible.
+La ventana no baja de **1152×640 lógicos** (`lib/main.dart`): con el
+marco de Windows, el contenido mínimo queda en ~833, por encima de
+`stackBelow` (820), así que la cola siempre se ve al lado de la tabla y
+la vista cambia de tamaño, no de forma. `stackBelow` queda solo como red
+de seguridad (ventana forzada por debajo del mínimo); no se alcanza en
+uso normal. Si alguna vez se apila, la tabla y la cola se reparten con
+`Expanded(flex: 1)` y `Expanded(flex: 1)`; nunca una cola de alto fijo
+que ahogue la tabla. El reparto 3:2 se probó a 1100×630 y desbordaba el
+vacío de la cola; 1:1 deja 168 lógicos para cada panel, suficiente para
+el vacío compacto. En el mínimo el reparto es tabla ≈ 498 y cola 320: con
+`CANCIÓN` y acción 128 la tabla sigue siendo legible.
 
 Columnas de tabla: portada 40 + gap 12, duración 72, acción 128; título y
 álbum a flex igual. Nunca anchos fijos que sumen más que el contenedor.
@@ -426,6 +438,18 @@ Row(
 | Icono de header | transparente | `blueText` / `fgDim` | — | 16 | hit 32 | 0 |
 
 - Todos: label `body` 14/w500, radio 8, una sola línea (sin truncar).
+- Hover explícito en el tema (el overlay derivado por M3 al 8 % no se
+  percibe sobre un relleno sólido):
+  - Primarios: `white` 15 % sobre el fondo; el label `darker` sube de
+    6.4:1 a 7.0:1 en azul y de 3.8:1 a 4.6:1 en marca.
+  - Outlined, text e icono: relleno `cardHover` (mismo token que el hover
+    de ítem), sin tocar el color del texto.
+  - Pressed y focus no se sobrescriben: caen en `highlightColor` y
+    `focusColor` del tema (`blueText` 12 % y 22 %).
+- Un botón con `styleFrom` propio (login de marca, Ajustes activo) debe
+  añadir `.copyWith(overlayColor: primaryButtonHoverOverlay)` o
+  `plainButtonHoverOverlay`: `styleFrom` deriva su propio overlay del 8 %
+  y, si no se sustituye, tapa el hover del tema.
 - Deshabilitado: `disabledBackgroundColor: card`,
   `disabledForegroundColor: fgDim` (tema), nunca `Opacity` sobre texto.
 - Los `IconButton` usan `tapTargetSize: shrinkWrap` y `minimumSize: 32`
@@ -468,9 +492,18 @@ Center(
 - Fila: 64 de alto, `paddingRow` (16/12), divisor 1 `border` con indent 16.
 - Portada 40 radio 8; gap 12; título `title` + artista `secondary` con gap
   2; álbum `body`; duración `body`; acción 128.
-- Botón de acción natural (≈118) alineado a la derecha; el label
-  `Descargar` no se trunca. Chip `En cola` de 40.
+- Acción de fila: botón `Descargar` y aviso `En cola` comparten caja
+  (`colAction` 128 × 40) con el contenido centrado. El aviso no mide su
+  contenido natural: así el cambio de estado no mueve la fila (E8). El
+  label `Descargar` no se trunca.
 - Datos (título, artista, álbum) con `maxLines: 1` + ellipsis + `Tooltip`.
+- Hover de fila: relleno `card` sobre el `sidebar` de la card, animado con
+  `motionHover` (160 ms, `easeOut`). La fila **no** es clicable: sin cursor
+  de mano, sin `InkWell` y sin acción; el hover solo ayuda a seguir la fila
+  al leer. Se usa `card` y no `cardHover` porque `fgMid` sobre `cardHover`
+  da 4.49:1 y no llega a AA (sobre `card` da 4.96:1). El color de reposo es
+  `sidebar` (no transparente): animar desde alfa 0 oscurece la fila a mitad
+  de transición.
 - Vacío: receta 3.7.
 - Sin cebreado, sin sombras, sin bordes internos.
 
@@ -491,8 +524,11 @@ Center(
   + check 12 en `darker`), **no** el glifo `check_circle_rounded`: a 125%
   el disco mide 22.5 px y el hinting del glifo aplana su base en una línea
   dura, así que el icono se ve cortado por abajo.
-- Vacío: receta 3.7. Footer (ruta `caption` con ellipsis + tooltip) **solo
-  si hay tareas**; en vacío se oculta para no desbordar a 1100×630.
+- Vacío: receta 3.7. Footer siempre visible: divider + ruta de destino
+  (`caption`, ellipsis + tooltip), también con la cola vacía; la ruta se
+  trunca dentro de la columna, nunca hace crecer el panel. En el alto
+  mínimo (1100×630) el vacío va sin inset vertical y con scroll de
+  seguridad: no desborda (E9).
 - El contador no se trunca: va en un `Text`/badge separado del título.
 
 ### 3.10 Sidebar
@@ -505,6 +541,14 @@ Center(
   label de una línea con ellipsis + tooltip si no cabe.
 - **Estado activo único**: fondo `card` + borde `blue` 45% +
   `Semantics(selected: true)`. Sin punto indicador aparte.
+- Hover: relleno `cardHover` animado con `motionHover` (160 ms,
+  `easeOut`), también sobre el ítem activo (el relleno lo pinta un
+  `AnimatedContainer`, no el `hoverColor` del `InkWell`, que quedaría
+  tapado por `card`). El reposo del ítem inactivo es `sidebar`, no
+  transparente, para que el fundido no oscurezca al interpolar alfa.
+  Mientras hay hover el subtítulo sube de `fgMid` a `fg`: `fgMid` sobre
+  `cardHover` da 4.49:1 y no pasa AA; `fg` da 5.53:1. El label ya es
+  `white`.
 - Ajustes usa el mismo estado activo cuando está seleccionado (fondo card,
   borde azul 45%, label blanco, icono `blue`) y el mismo ancho exterior de 8
   que los ítems; no se mete en un padding de 12.
@@ -531,8 +575,8 @@ Si un widget nuevo trae un default de M3, **primero** se fija en el tema.
 
 ## 4. Copy
 
-- Sentence case: `Iniciar sesión`, `Guardar cookies`, `Abrir descargas`,
-  `Abrir YouTube para iniciar sesión`.
+- Sentence case: `Iniciar sesión`, `Guardar`, `Abrir descargas`,
+  `Abrir YouTube`.
 - Tildes siempre: `búsqueda`, `álbum`, `canción`, `duración`, `acción`.
 - Puntos suspensivos: `…` (no `...`).
 - Un verbo por acción; el botón dice exactamente lo que hace (si solo

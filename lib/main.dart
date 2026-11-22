@@ -17,10 +17,13 @@ Future<void> main() async {
   await windowManager.ensureInitialized();
   await AuthStore.instance.load();
 
-  // Ventana según escala del display primario (100/125/150/200%):
-  // el mínimo lógico × escala cabe en pantallas comunes de ese tramo
-  // (1366px@100%, 1536px@125%, 1080p@150%, QHD/4K@200%). El tamaño
-  // inicial además se recorta al área visible. Centrada al arrancar.
+  // Mínimo plano 1152×640 lógicos: el marco de Windows se come ~16 lógicos
+  // de ancho, así que el contenido queda en ~833, por encima de
+  // `stackBelow` (820): la cola siempre se ve al lado de la tabla y el
+  // apilado queda solo como red de seguridad. Antes el mínimo bajaba a
+  // 1100/1120 en 125%/200%, justo por debajo del umbral, y la vista
+  // cambiaba de layout. El tamaño inicial se recorta al área visible y la
+  // ventana arranca centrada.
   await windowManager.waitUntilReadyToShow(
     await _windowOptions(),
     () async => windowManager.show(),
@@ -39,26 +42,23 @@ Future<void> main() async {
   );
 }
 
-/// Mínimo de ventana por escala del display (lógicos): el mínimo ×
-/// escala cabe en pantallas comunes de cada tramo.
-Size _minWindowForScale(double scale) {
-  if (scale >= 1.75) return const Size(1120, 610); // 200%
-  if (scale >= 1.4) return const Size(1200, 630); // 150%
-  if (scale >= 1.15) return const Size(1100, 630); // 125%
-  return const Size(1100, 660); // 100%
-}
+/// Mínimo de ventana (lógicos). 1152 dan ~833 de contenido: `stackBelow`
+/// es 820, así que la cola nunca se apila en uso normal. La holgura de
+/// ~13 px cubre el marco de Windows (medido: 18 px físicos a 125%) y el
+/// redondeo de escalas fraccionarias. El alto 640 deja ~602 de cliente, por
+/// encima del mínimo ya validado con el footer fijo de la cola (E9).
+const Size _minWindow = Size(1152, 640);
 
 Future<WindowOptions> _windowOptions() async {
   const fallback = WindowOptions(
     size: Size(1200, 660),
-    minimumSize: Size(1100, 630),
+    minimumSize: _minWindow,
     center: true,
     title: 'Nova Hub Downloader',
   );
   try {
     final display = await screenRetriever.getPrimaryDisplay();
     final scale = (display.scaleFactor ?? 1).toDouble();
-    final min = _minWindowForScale(scale);
     final visible = display.visibleSize ?? display.size;
     // `screen_retriever` devuelve píxeles físicos; `WindowOptions` trabaja
     // en lógicos. Sin esta conversión, a 125% la ventana inicial (1200)
@@ -74,10 +74,10 @@ Future<WindowOptions> _windowOptions() async {
 
     return WindowOptions(
       size: Size(
-        fit(1200, min.width, visibleLogical.width),
-        fit(660, min.height, visibleLogical.height),
+        fit(1200, _minWindow.width, visibleLogical.width),
+        fit(660, _minWindow.height, visibleLogical.height),
       ),
-      minimumSize: min,
+      minimumSize: _minWindow,
       center: true,
       title: 'Nova Hub Downloader',
     );
