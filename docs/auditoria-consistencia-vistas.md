@@ -1,28 +1,15 @@
 # Auditoría de consistencia visual — pendientes y excepciones
 
-Fecha: 2026-11-17 · App: Nova Hub Downloader v0.9.1 (Windows/Flutter)
+Fecha: 2026-11-23 · App: Nova Hub Downloader v0.9.1 (Windows/Flutter)
 Contrato vigente: 40/14/64 (`docs/reglas-ui.md`)
 
 > Documento reducido: los hallazgos A–I ya aplicados se eliminaron.
-> Aquí solo queda lo que falta verificar y las excepciones aceptadas.
+> Aquí queda lo pendiente, el registro de la última verificación (P1) y
+> las excepciones aceptadas.
 
 ---
 
 ## Pendiente
-
-### P1 — Estados hover/focus sin verificar
-
-- Hover resuelto y verificado con captura real: fila de tabla (relleno
-  `card`), ítem del sidebar (`cardHover`, también el activo) y botones
-  (primarios aclaran con `white` 15 %; outlined/text/icono rellenan
-  `cardHover`), todos animados con `motionHover`. El overlay derivado por
-  M3 al 8 % no se percibía sobre rellenos sólidos.
-- Pendiente: foco visible por teclado y estado pressed en botones. No se
-  sobrescriben: usan `highlightColor` y `focusColor` del tema; falta
-  confirmarlos con captura.
-- No introducir tonos ni alphas fuera de la paleta aprobada.
-- Archivos: `lib/theme/one_dark_pro.dart`, `lib/widgets/sidebar.dart`,
-  `lib/widgets/results_table.dart`.
 
 ### P2 — Contraste sobre `cardHover`
 
@@ -35,7 +22,47 @@ Contrato vigente: 40/14/64 (`docs/reglas-ui.md`)
   texto y 3:1 para límites e iconos.
 - Archivo de referencia: `lib/theme/one_dark_pro.dart`.
 
-No queda ningún hallazgo A–I pendiente de aplicación.
+No queda ningún hallazgo A–I pendiente de aplicación; P2 es una regla de
+medición, no deuda de implementación. El primario de marca se retiró en
+v0.9.1: `Abrir YouTube` usa el azul del tema.
+
+---
+
+## Verificado
+
+### P1 — Hover, foco y pressed (cerrado)
+
+- Hover: fila de tabla (`card`), ítem del sidebar (`cardHover`, también el
+  activo) y botones (primario aclara con `white` 15 %;
+  outlined/text/icono rellenan `cardHover`), animados con `motionHover`.
+- Foco por teclado: borde de 2 px dentro de la forma (`UiTokens.borderFocus`)
+  más cambio de relleno. En fondos oscuros el anillo es `blueText`
+  (5.60:1 sobre `cardHover`, 7.30:1 sobre `sidebar`); sobre `buttonBlue`
+  cae a 1.24:1, así que el primario usa `darker` (6.38:1) y oscurece
+  el relleno para que el anillo no se lea como sombra. El resto de botones
+  usan `blueText` 12 %.
+- Pressed explícito: primario azul `darker` 10 % (oscurece, distinto del
+  hover que aclara); outlined/text/icono `blueText` 12 %, el mismo tinte
+  del highlight.
+- Verificado con captura real a 1440×800 físicos (ventana de 1152×640
+  lógicos): campo de búsqueda, `Buscar`, `Descargar`, icono de la cola,
+  ítem del sidebar, Ajustes activo y `Abrir descargas`. El anillo del
+  `IconButton` sigue la forma circular de su `StadiumBorder`.
+- Archivos: `lib/theme/one_dark_pro.dart`, `lib/widgets/sidebar.dart`,
+  `lib/views/settings_view.dart`.
+
+### P3 — Primario de marca (retirado en v0.9.1)
+
+- Existió un primario rojo (`buttonRed`, `onBrand`) para `Abrir YouTube`
+  con estados propios que oscurecían el relleno para conservar AA.
+- A petición de producto se elimina: el botón usa el `ElevatedButton` del
+  tema, igual que `Guardar` — `buttonBlue` con texto `darker` (6.38:1 en
+  reposo, ~7.0:1 en hover).
+- Se retiran los tokens `buttonRed` y `onBrand` y el helper
+  `brandButtonOverlay`; no queda ninguna regla de color de marca en el
+  contrato (ADR 11 y 20 actualizados).
+- Archivos: `lib/theme/one_dark_pro.dart`, `lib/views/settings_view.dart`,
+  `docs/reglas-ui.md` (§2.6, §3.6, ADR 11/20).
 
 ---
 
@@ -87,3 +114,20 @@ No queda ningún hallazgo A–I pendiente de aplicación.
 - Coste aceptado: en pantallas con área lógica menor que 1152 de ancho
   (p. ej. 1366×768 a 125%) la ventana ya no cabe entera; antes se apilaba.
 - Archivos: `lib/main.dart`, `docs/reglas-ui.md` §2.7.
+
+### E11 — El hover opaco tapa el anillo de foco de outlined/text/icono
+
+- `ButtonStyleButton` construye su `Material` con `borderOnForeground:
+  false`; el borde de 2 px se pinta debajo del overlay del `InkWell`. El
+  hover de estos botones es `cardHover`, opaco, así que con el puntero
+  encima de un botón ya enfocado el anillo desaparece.
+- El foco sigue siendo perceptible por el relleno (`blueText` 12 %); con
+  navegación solo por teclado (puntero fuera) el anillo se ve completo.
+- No se cambia el hover a un tinte translúcido para no introducir alfas
+  nuevas ni alterar el hover aprobado en v0.9.1. El primario azul con
+  `white` 15 % deja ver el anillo `darker`; los outlined/text/icono son
+  los únicos afectados.
+- Decisión: diferir el arreglo a Fase 4. Al extraer los botones compartidos,
+  pintar el anillo en `foregroundDecoration` (misma técnica que el ítem
+  del sidebar), que se dibuja por encima del ink. No requiere alfas nuevas.
+- Archivos: `lib/theme/one_dark_pro.dart` (ADR 21).

@@ -100,8 +100,12 @@ Estándar vigente: **40/14/64** (M3 40 · Carbon md 40 · Fluent large 40). Ver 
 - v0.9.1: copy corto en Ajustes, acción de tabla de caja fija (E8), ruta
   destino siempre visible en la cola (E9), mínimo de ventana plano
   1152×640 (E10) y hover animado a 160 ms en filas, sidebar y botones.
-  P1 queda solo en foco por teclado/pressed; P2 documenta los contrastes
-  medidos sobre `cardHover`.
+  P1 cerrado: foco por teclado con borde de 2 px + relleno de foco y
+  pressed explícito en botones e ítem del sidebar; E11 documenta que el
+  hover opaco tapa el anillo en outlined/text/icono y su arreglo queda
+  para Fase 4. El primario de marca se retiró: `Abrir YouTube` usa el
+  azul del tema con texto `darker`, igual que los demás; no queda regla
+  de rojo de marca. P2 documenta los contrastes medidos sobre `cardHover`.
 - La consola conserva `yellow` como texto por la excepción E7; no añadir
   más usos.
 - No hacer `git add` / `git commit` sin pedido explícito.

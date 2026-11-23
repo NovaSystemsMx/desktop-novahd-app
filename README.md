@@ -104,19 +104,19 @@ tool/
 docs/
   reglas-ui.md                    # contrato visual 40/14/64
   auditoria-consistencia-vistas.md # pendientes y excepciones de UI
-  AUDITORIA_BETA.md               # auditoría pre-beta (producto)
+  auditoria-beta.md               # auditoría pre-beta (producto)
 windows/runner/   # título nativo "Nova Hub Downloader"
 ```
 
 ## Sistema visual
 
-Paleta One Dark Pro en 19 colores (`lib/theme/one_dark_pro.dart`):
-13 base (6 fondos/grises + blanco, primario azul `#5F7EA6`,
-verde/amarillo/rojo de estados) + rampa de texto AA: `fgMid`
-`#9AA0AB` para secundarios y etiquetas, variantes `greenText` /
-`blueText` / `redText` para texto en color, botón primario
-`#7FA3CC` con texto oscuro (6.4:1) y botón de marca `buttonRed`
-`#AB646A` con texto negro (4.8:1). Sin colores por plataforma.
+Paleta One Dark Pro en 18 colores (`lib/theme/one_dark_pro.dart`):
+fondos/grises (`background`, `sidebar`, `darker`, `border`, `card`,
+`cardHover`, `fg`, `fgDim`), blanco, azul/verde/rojo/amarillo de estado,
+`fgMid` `#9AA0AB` para secundarios, variantes AA `greenText` /
+`blueText` / `redText` para texto en color y un único botón primario
+`#7FA3CC` con texto `darker` (6.38:1), compartido por todas las acciones.
+Sin colores por plataforma.
 
 Escala tipográfica única (`AppText`, 9 estilos, familia Segoe UI):
 

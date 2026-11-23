@@ -298,14 +298,6 @@ class _SettingsViewState extends State<SettingsView> {
                       alignment: Alignment.centerLeft,
                       child: ElevatedButton.icon(
                         onPressed: _openLogin,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: OneDarkPro.buttonRed,
-                          foregroundColor: OneDarkPro.darker,
-                        ).copyWith(
-                          // Conserva el hover aclarado del tema aunque el
-                          // botón fije su propio fondo de marca.
-                          overlayColor: primaryButtonHoverOverlay,
-                        ),
                         icon: const Icon(
                           Icons.play_circle_fill_rounded,
                           size: UiTokens.iconButton,

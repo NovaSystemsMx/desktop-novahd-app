@@ -19,10 +19,18 @@
   `Curves.easeOut`, sin parpadeo: la fila de resultados parte de `sidebar`
   (no transparente) y funde a `card`; el ítem del sidebar funde a
   `cardHover`, también el activo (el subtítulo sube a `fg` para conservar
-  AA 4.5:1). Los botones recuperan un hover perceptible: los primarios
-  aclaran con `white` 15 % (el label sube a 7.0:1 en azul y 4.6:1 en
-  marca) y outlined/text/icono rellenan `cardHover`. La cola y los vacíos
-  no llevan hover (no son interactivos).
+  AA 4.5:1). Los botones recuperan un hover perceptible: el primario
+  aclara con `white` 15 % (el label sube a 7.0:1) y outlined/text/icono
+  rellenan `cardHover`. La cola y los vacíos no llevan hover (no son
+  interactivos).
+- Foco por teclado visible en todos los controles: borde de 2 px dentro
+  de la forma (`blueText`; `darker` sobre los primarios claros) más
+  cambio de relleno, y pressed explícito (el primario azul oscurece con
+  `darker` 10 %; outlined/text/icono usan `blueText` 12 %). El ítem del
+  sidebar y el botón Ajustes activo también muestran el anillo.
+- El botón `Abrir YouTube` usa el primario azul del tema con texto
+  `darker` (6.38:1), igual que `Guardar`. Se retira el rojo de marca:
+  desaparecen `buttonRed`, `onBrand` y su regla de contrato.
 
 ## v0.9 — Correcciones de layout y descargas
 
@@ -78,7 +86,7 @@
   badges "Pronto"; status bar 36px con punto-anillo; tildes en copias.
 - Ajustes con flujo ordenado (pasos → acción), cards con header
   full-bleed, campo de cookies con label y Paso 3; login en rojo
-  de marca con texto negro.
+  de marca con texto negro (revertido en v0.9.1).
 - Ventana con tamaño inicial y mínimo según escala del display
   (100/125/150/200%) vía `window_manager` + `screen_retriever`.
 - Cola apilada bajo 860px de contenido en ventanas angostas.

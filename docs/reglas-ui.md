@@ -191,7 +191,6 @@ Reglas:
 | Acento rojo (texto) | `redText` |
 | Acento verde (texto) | `greenText` |
 | Fondo primario azul | `buttonBlue` + texto `darker` |
-| Fondo primario de marca | `buttonRed` + texto `darker` |
 | Hover de card/ítem | `cardHover` |
 | Tonos base (`blue`, `red`, `green`, `yellow`) | solo fondos, bordes e iconos decorativos |
 
@@ -224,10 +223,10 @@ Variantes alfa aprobadas (siempre sobre un token de la paleta):
 
 | Alpha | Uso |
 |---:|---|
-| 0.10 | fondo del banner de error (`red`) |
-| 0.12 | fondo de “en cola” / highlight (`blue`, `blueText`) |
+| 0.10 | fondo del banner de error (`red`); pressed/foco del primario azul (`darker`) |
+| 0.12 | fondo de “en cola” / highlight (`blue`, `blueText`); pressed/foco de botón sin relleno (`blueText`) |
 | 0.15 | fondo de tile decorativo (`blue`); hover de botón primario (`white`) |
-| 0.22 | anillo de foco (`blueText`) |
+| 0.22 | tinte de foco de `InkWell` (ítem del sidebar); el foco de botón usa borde de 2 px |
 | 0.40 | borde de marca / error (`blue`, `red`) |
 | 0.45 | borde de ítem activo / punto de estado (`blue`) |
 | 0.55 | icono deshabilitado (`fgDim`) |
@@ -432,30 +431,41 @@ Row(
 | Tipo | Fondo | Texto | Borde | Icono | Alto | Padding |
 |---|---|---|---|---:|---:|---|
 | Primario azul | `buttonBlue` | `darker` | — | 16 | 40 | 16/10 |
-| Primario marca | `buttonRed` | `darker` | — | 16 | 40 | 16/10 |
 | Outlined | transparente | `fg` | `border` 1 | 16 | 40 | 16/10 |
 | Text | transparente | `blueText` | — | 16 | 40 | 12/10 |
 | Icono de header | transparente | `blueText` / `fgDim` | — | 16 | hit 32 | 0 |
 
 - Todos: label `body` 14/w500, radio 8, una sola línea (sin truncar).
-- Hover explícito en el tema (el overlay derivado por M3 al 8 % no se
+- Estados explícitos en el tema (el overlay derivado por M3 al 8 % no se
   percibe sobre un relleno sólido):
-  - Primarios: `white` 15 % sobre el fondo; el label `darker` sube de
-    6.4:1 a 7.0:1 en azul y de 3.8:1 a 4.6:1 en marca.
-  - Outlined, text e icono: relleno `cardHover` (mismo token que el hover
-    de ítem), sin tocar el color del texto.
-  - Pressed y focus no se sobrescriben: caen en `highlightColor` y
-    `focusColor` del tema (`blueText` 12 % y 22 %).
-- Un botón con `styleFrom` propio (login de marca, Ajustes activo) debe
-  añadir `.copyWith(overlayColor: primaryButtonHoverOverlay)` o
-  `plainButtonHoverOverlay`: `styleFrom` deriva su propio overlay del 8 %
-  y, si no se sustituye, tapa el hover del tema.
+  - Hover del primario azul: `white` 15 %; el label `darker` sube de
+    6.38:1 a ~7.0:1.
+  - Hover outlined/text/icono: relleno `cardHover` (mismo token que el
+    hover de ítem), sin tocar el color del texto.
+  - Pressed del primario azul: `darker` 10 % (oscurece; no se confunde con
+    el hover que aclara).
+    Outlined/text/icono: `blueText` 12 %.
+  - Foco: borde de 2 px dentro de la forma (`UiTokens.borderFocus`) más
+    relleno de foco. `blueText` en fondos oscuros (5.6:1–7.3:1) y
+    `darker` en el primario claro (6.38:1 en `buttonBlue`). El azul
+    oscurece el relleno (`darker` 10 %) para que el anillo no se lea como
+    sombra; el resto usa `blueText` 12 %.
+- Un botón con `styleFrom` propio (Ajustes activo) debe añadir vía
+  `.copyWith(...)` un `overlayColor` (`primaryButtonOverlay` o
+  `plainButtonOverlay`) **y** `side: focusRing(...)`: `styleFrom` deriva su
+  propio overlay del 8 % y fija `side`, así que sin sustituirlos se
+  pierden hover/pressed y el anillo de foco del tema.
+- El hover opaco de outlined/text/icono puede tapar el anillo mientras el
+  puntero está encima (E11, `borderOnForeground: false`); el relleno de
+  foco mantiene la señal. Con teclado y puntero fuera el anillo se ve
+  completo.
 - Deshabilitado: `disabledBackgroundColor: card`,
   `disabledForegroundColor: fgDim` (tema), nunca `Opacity` sobre texto.
 - Los `IconButton` usan `tapTargetSize: shrinkWrap` y `minimumSize: 32`
   desde `iconButtonTheme`; si se omite, M3 los infla a 48 y rompe el header.
 - Nada de `fontWeight: w600` puntual.
-- Un solo color de texto para primarios: `darker` (no `#000`).
+- El texto del primario es `darker` sobre `buttonBlue` (6.38:1), elegido
+  por contraste. Todos los primarios comparten este estilo del tema.
 
 ### 3.7 Estado vacío
 
@@ -620,8 +630,12 @@ cambia el copy: **nunca ellipsis**.
 - `Semantics(selected: true)` en el ítem activo del sidebar (y en Ajustes).
 - `liveRegion: true` en errores y en “Buscando”.
 - Tooltip obligatorio en todo botón que solo tenga icono.
-- Foco visible: borde 2 px `blueText`; no eliminarlo con `focusColor`
-  transparente.
+- Foco visible: borde de 2 px dentro de la forma (`blueText`; `darker`
+  sobre los primarios claros) más cambio de relleno. El hover opaco de
+  outlined/text/icono puede taparlo mientras el puntero está encima
+  (E11); el relleno mantiene la señal. El arreglo definitivo —anillo en
+  `foregroundDecoration`— va en Fase 4 con los botones compartidos. No
+  eliminar el foco con `focusColor` transparente.
 - Contraste mínimo 4.5:1 en texto normal y 3:1 en texto grande/iconos.
 - Deshabilitado: color explícito; si se usa `Opacity`, mínimo 0.65 y
   nunca sobre texto que deba leerse.
@@ -741,7 +755,7 @@ E7 de color. Cualquier código nuevo ya debe usar tokens.
 | 08 | Gap de bloque 16, nunca 18 | Ritmo único (A8). |
 | 09 | Cola 320/360, apilar bajo 820 y reparto 1:1 | Evita el acantilado del breakpoint 860 (G1) y el tile fijo que ahogaba la tabla. 1:1 se verificó a 1100×630: 3:2 desbordaba el vacío de la cola. |
 | 10 | Tooltip, TextButton, IconButton y botones pinneados | M3 pinta tooltips blancos, TextButton azul base e IconButton de 48 (I1, I2). |
-| 11 | Texto de primarios = `darker` | Unifica azul y rojo (B4). |
+| 11 | Texto del primario = `darker` sobre `buttonBlue` (6.38:1) | Todos los primarios comparten el estilo del tema. Antes existía un primario de marca con `onBrand`; retirado en v0.9.1. |
 | 12 | Mono 12 en consola y cookies | Elimina 12/11 (D4). |
 | 13 | Copy sentence case + `…` | Coherencia (H1–H4). |
 | 14 | Status bar por vista | “Listo para buscar” no aplica en Ajustes (H5). |
@@ -750,6 +764,8 @@ E7 de color. Cualquier código nuevo ya debe usar tokens.
 | 17 | Alturas fijas (40/64/48) + copy corto + dato truncado con tooltip | Norma desktop; el copy de UI cabe, el dato de usuario trunca. Si se habilita escalado de texto, migrar a `minHeight` (WCAG 1.4.4/F69). |
 | 18 | Estándar 40/14/64: controles 40, cuerpo 14, caption 12, filas de dos líneas 64, header 40, top 48, status 32, sidebar 256 | Adopta la convergencia de las grandes empresas (M3 40, Carbon md 40, Fluent large 40) en lugar de los 48/68/22 locales. Da densidad desktop, targets AA y una escala tipográfica reconocible. Reemplaza ADR 01/03/04/05/17 en sus valores. |
 | 19 | Excepción de color: `yellow` base como texto solo en el warning de consola | No hay `yellowText` en la paleta; contraste ~5.1:1. Es el único punto; si se aprueba `yellowText`, se migra y se elimina la excepción (E7). |
+| 20 | _Retirada (v0.9.1)_ | El primario de marca rojo (`buttonRed`/`onBrand`) se elimina a petición de producto: `Abrir YouTube` usa el primario azul del tema. |
+| 21 | Anillo de foco en `foregroundDecoration` para botones compartidos | El `side` del tema queda bajo el hover opaco (E11); se aplicará al extraer los botones en Fase 4. |
 
 ---
 

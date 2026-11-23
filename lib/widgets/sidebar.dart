@@ -112,8 +112,15 @@ class Sidebar extends StatelessWidget {
                             ),
                           ).copyWith(
                             // Sin esto, styleFrom deriva un overlay blanco
-                            // al 8 % y desplaza el hover del tema.
-                            overlayColor: plainButtonHoverOverlay,
+                            // al 8 % y desplaza hover/pressed del tema.
+                            overlayColor: plainButtonOverlay,
+                            // `styleFrom` fija `side`, así que el anillo de
+                            // foco hay que declararlo aquí también.
+                            side: focusRing(
+                              rest: BorderSide(
+                                color: OneDarkPro.blue.withValues(alpha: 0.45),
+                              ),
+                            ),
                           )
                         : null,
                     icon: Icon(
@@ -244,6 +251,7 @@ class _SidebarItem extends StatefulWidget {
 
 class _SidebarItemState extends State<_SidebarItem> {
   bool _hovered = false;
+  bool _focused = false;
 
   @override
   Widget build(BuildContext context) {
@@ -267,6 +275,7 @@ class _SidebarItemState extends State<_SidebarItem> {
           // sobre el fondo `card` del ítem activo.
           hoverColor: Colors.transparent,
           onHover: (hovering) => setState(() => _hovered = hovering),
+          onFocusChange: (focused) => setState(() => _focused = focused),
           onTap: widget.onTap,
           child: AnimatedContainer(
             duration: UiTokens.motionHover,
@@ -284,6 +293,20 @@ class _SidebarItemState extends State<_SidebarItem> {
                     : Colors.transparent,
               ),
             ),
+            // Anillo de foco por teclado (2 px `blueText`). Va en
+            // `foregroundDecoration` para no alterar el inset del borde
+            // activo ni el tamaño del ítem.
+            foregroundDecoration: _focused
+                ? BoxDecoration(
+                    borderRadius: BorderRadius.circular(
+                      UiTokens.radiusControl,
+                    ),
+                    border: Border.all(
+                      color: OneDarkPro.blueText,
+                      width: UiTokens.borderFocus,
+                    ),
+                  )
+                : null,
             child: Row(
               children: [
                 ExcludeSemantics(
