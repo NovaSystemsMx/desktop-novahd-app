@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'ui_tokens.dart';
+
 /// Paleta inspirada en One Dark Pro.
 ///
 /// Paleta cerrada: no se añaden colores sin aprobación explícita.
@@ -34,10 +36,65 @@ abstract class OneDarkPro {
   /// Fondo de botón primario: mismo matiz que `blue`, aclarado para
   /// que el texto `darker` alcance 6.4:1 (el `blue` base daba 4.0:1).
   static const buttonBlue = Color(0xFF7FA3CC);
+}
 
-  /// Fondo de botón de marca (login YouTube): `red` aclarado +8 por canal
-  /// para que el texto negro alcance 4.8:1 (el `red` base daba 4.3:1).
-  static const buttonRed = Color(0xFFAB646A);
+/// Overlay explícito para botones.
+///
+/// `styleFrom` deriva el overlay del `foregroundColor` al 8 %, que sobre un
+/// relleno sólido es casi invisible. Aquí se fijan hover, pressed y foco.
+/// El foco añade un cambio de relleno además del anillo ([focusRing]):
+/// sobre los botones claros el anillo oscuro se lee como sombra si el
+/// relleno no cambia.
+///
+/// Público para que los botones con estilo propio (Ajustes activo) no
+/// pierdan los estados del tema al pasar `styleFrom`.
+WidgetStateProperty<Color?> buttonOverlay({
+  required Color hover,
+  required Color pressed,
+  required Color focus,
+}) {
+  return WidgetStateProperty.resolveWith<Color?>((states) {
+    if (states.contains(WidgetState.pressed)) return pressed;
+    if (states.contains(WidgetState.focused)) return focus;
+    if (states.contains(WidgetState.hovered)) return hover;
+    return null;
+  });
+}
+
+/// Hover/pressed/foco del primario azul. El hover aclara con `white` 15 %
+/// (el label `darker` sube de 6.38:1 a ~7.0:1); pressed y foco oscurecen
+/// con `darker` 10 %: el foco se distingue del reposo por el relleno y por
+/// el anillo de [focusRing].
+WidgetStateProperty<Color?> get primaryButtonOverlay => buttonOverlay(
+  hover: OneDarkPro.white.withValues(alpha: 0.15),
+  pressed: OneDarkPro.darker.withValues(alpha: 0.10),
+  focus: OneDarkPro.darker.withValues(alpha: 0.10),
+);
+
+/// Hover/pressed/foco de botón sin relleno (outlined, text, icono): hover
+/// `cardHover`; pressed y foco `blueText` 12 %, el mismo tinte del
+/// highlight. En estos botones el anillo `blueText` es el indicador fuerte.
+WidgetStateProperty<Color?> get plainButtonOverlay => buttonOverlay(
+  hover: OneDarkPro.cardHover,
+  pressed: OneDarkPro.blueText.withValues(alpha: 0.12),
+  focus: OneDarkPro.blueText.withValues(alpha: 0.12),
+);
+
+/// Borde de foco por teclado: 2 px dentro de la forma, sin cambiar tamaño.
+///
+/// `blueText` sobre fondos oscuros va de 5.6:1 a 7.3:1. Sobre el relleno
+/// claro del primario (`buttonBlue`) cae a 1.24:1, así que ese botón pasa
+/// `color: darker` (6.38:1). Ver contrato §5.
+WidgetStateProperty<BorderSide?> focusRing({
+  Color color = OneDarkPro.blueText,
+  BorderSide? rest,
+}) {
+  return WidgetStateProperty.resolveWith<BorderSide?>((states) {
+    if (states.contains(WidgetState.focused)) {
+      return BorderSide(color: color, width: UiTokens.borderFocus);
+    }
+    return rest;
+  });
 }
 
 /// Tema alineado con la convergencia de Material 3 (40), Carbon md (40)
@@ -196,6 +253,13 @@ ThemeData buildNovadhTheme() {
         textStyle: AppText.body.copyWith(fontWeight: FontWeight.w500),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ).copyWith(
+        // El primario aclara con `white` 15 % y el label `darker`
+        // sube de 6.38:1 a ~7.0:1.
+        overlayColor: primaryButtonOverlay,
+        // El relleno primario es claro: un anillo `blueText` daría 1.24:1;
+        // `darker` da 6.38:1.
+        side: focusRing(color: OneDarkPro.darker),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
@@ -208,6 +272,9 @@ ThemeData buildNovadhTheme() {
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         side: const BorderSide(color: OneDarkPro.border),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ).copyWith(
+        overlayColor: plainButtonOverlay,
+        side: focusRing(rest: const BorderSide(color: OneDarkPro.border)),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
@@ -219,6 +286,9 @@ ThemeData buildNovadhTheme() {
         textStyle: AppText.body.copyWith(fontWeight: FontWeight.w500),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ).copyWith(
+        overlayColor: plainButtonOverlay,
+        side: focusRing(),
       ),
     ),
     // IconButton de header/acción: 32 reales, sin el padding de 48 de M3.
@@ -227,6 +297,8 @@ ThemeData buildNovadhTheme() {
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         minimumSize: WidgetStateProperty.all(const Size(32, 32)),
         padding: WidgetStateProperty.all(EdgeInsets.zero),
+        overlayColor: plainButtonOverlay,
+        side: focusRing(),
       ),
     ),
     // M3 pinta los tooltips blancos en oscuro; aquí van al tema.

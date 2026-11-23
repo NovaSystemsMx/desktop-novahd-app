@@ -298,15 +298,11 @@ class _SettingsViewState extends State<SettingsView> {
                       alignment: Alignment.centerLeft,
                       child: ElevatedButton.icon(
                         onPressed: _openLogin,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: OneDarkPro.buttonRed,
-                          foregroundColor: OneDarkPro.darker,
-                        ),
                         icon: const Icon(
                           Icons.play_circle_fill_rounded,
                           size: UiTokens.iconButton,
                         ),
-                        label: const Text('Abrir YouTube para iniciar sesión'),
+                        label: const Text('Abrir YouTube'),
                       ),
                     ),
                     const SizedBox(height: UiTokens.spaceInline),
@@ -391,7 +387,7 @@ class _SettingsViewState extends State<SettingsView> {
                             Icons.save_rounded,
                             size: UiTokens.iconButton,
                           ),
-                          label: const Text('Guardar cookies'),
+                          label: const Text('Guardar'),
                         ),
                         OutlinedButton.icon(
                           onPressed: auth.hasStoredCookies

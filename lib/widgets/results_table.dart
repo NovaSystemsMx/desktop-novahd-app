@@ -116,12 +116,10 @@ class ResultsTable extends StatelessWidget {
         final t = tracks[i];
         final queued = queuedIds.contains(t.id);
         // Fila no interactiva: la única acción vive en el botón
-        // "Descargar" (evita doble tab-stop y toques accidentales).
-        return Container(
+        // "Descargar" (evita doble tab-stop y toques accidentales). El
+        // hover solo sigue la fila: sin cursor de mano ni click.
+        return _HoverRow(
           key: ValueKey(t.id),
-          height: UiTokens.sizeRow,
-          color: Colors.transparent,
-          padding: UiTokens.paddingRow,
           child: Row(
             children: [
               ClipRRect(
@@ -184,53 +182,53 @@ class ResultsTable extends StatelessWidget {
               ),
               SizedBox(
                 width: UiTokens.colAction,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: queued
-                      ? Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: UiTokens.spaceItemH,
-                            vertical: UiTokens.spaceControlV,
-                          ),
-                          decoration: BoxDecoration(
-                            color: OneDarkPro.blue.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(
-                              UiTokens.radiusControl,
-                            ),
-                            border: Border.all(
-                              color: OneDarkPro.blue.withValues(alpha: 0.4),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const ExcludeSemantics(
-                                child: Icon(
-                                  Icons.check_circle_rounded,
-                                  color: OneDarkPro.blueText,
-                                  size: UiTokens.iconButton,
-                                ),
-                              ),
-                              const SizedBox(width: UiTokens.spaceBadgeH),
-                              Text(
-                                'En cola',
-                                style: AppText.body.copyWith(
-                                  color: OneDarkPro.blueText,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ElevatedButton.icon(
-                          onPressed: () => onDownload(t),
-                          icon: const Icon(
-                            Icons.download_rounded,
-                            size: UiTokens.iconButton,
-                          ),
-                          label: const Text('Descargar'),
+                height: UiTokens.sizeControl,
+                // Excepción E8: el aviso ocupa la misma caja que el botón
+                // (128×40) para que encolar no mueva el layout de la fila.
+                child: queued
+                    ? Container(
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: UiTokens.spaceItemH,
                         ),
-                ),
+                        decoration: BoxDecoration(
+                          color: OneDarkPro.blue.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(
+                            UiTokens.radiusControl,
+                          ),
+                          border: Border.all(
+                            color: OneDarkPro.blue.withValues(alpha: 0.4),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const ExcludeSemantics(
+                              child: Icon(
+                                Icons.check_circle_rounded,
+                                color: OneDarkPro.blueText,
+                                size: UiTokens.iconButton,
+                              ),
+                            ),
+                            const SizedBox(width: UiTokens.spaceBadgeH),
+                            Text(
+                              'En cola',
+                              style: AppText.body.copyWith(
+                                color: OneDarkPro.blueText,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ElevatedButton.icon(
+                        onPressed: () => onDownload(t),
+                        icon: const Icon(
+                          Icons.download_rounded,
+                          size: UiTokens.iconButton,
+                        ),
+                        label: const Text('Descargar'),
+                      ),
               ),
             ],
           ),
@@ -250,6 +248,45 @@ class ResultsTable extends StatelessWidget {
           color: OneDarkPro.fgDim,
           size: UiTokens.iconTileView,
         ),
+      ),
+    );
+  }
+}
+
+/// Fila de resultados con seguimiento de puntero.
+///
+/// No es clicable: el hover solo tiñe el fondo (`card`, una superficie
+/// sobre el `sidebar` de la tabla) para no perder la fila al leer. No
+/// cambia el cursor ni responde a toques; `fgMid` sobre `cardHover` da
+/// 4.49:1 y no llega a AA, por eso aquí se usa `card` (4.96:1).
+///
+/// El color de reposo es `sidebar`, no `Colors.transparent`: animar desde
+/// transparente interpola el alfa y el fondo se oscurece a mitad de
+/// transición (parpadeo). Con dos colores opacos el fundido es monótono.
+class _HoverRow extends StatefulWidget {
+  final Widget child;
+
+  const _HoverRow({super.key, required this.child});
+
+  @override
+  State<_HoverRow> createState() => _HoverRowState();
+}
+
+class _HoverRowState extends State<_HoverRow> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: UiTokens.motionHover,
+        curve: UiTokens.motionHoverCurve,
+        height: UiTokens.sizeRow,
+        padding: UiTokens.paddingRow,
+        color: _hovered ? OneDarkPro.card : OneDarkPro.sidebar,
+        child: widget.child,
       ),
     );
   }

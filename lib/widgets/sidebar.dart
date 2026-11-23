@@ -66,8 +66,7 @@ class Sidebar extends StatelessWidget {
             padding: UiTokens.paddingSidebarLabel,
             child: Text('PLATAFORMAS', style: AppText.caps),
           ),
-          _item(
-            context,
+          _SidebarItem(
             icon: Icons.music_note_rounded,
             color: OneDarkPro.blue,
             label: 'Spotify',
@@ -111,6 +110,17 @@ class Sidebar extends StatelessWidget {
                             side: BorderSide(
                               color: OneDarkPro.blue.withValues(alpha: 0.45),
                             ),
+                          ).copyWith(
+                            // Sin esto, styleFrom deriva un overlay blanco
+                            // al 8 % y desplaza hover/pressed del tema.
+                            overlayColor: plainButtonOverlay,
+                            // `styleFrom` fija `side`, así que el anillo de
+                            // foco hay que declararlo aquí también.
+                            side: focusRing(
+                              rest: BorderSide(
+                                color: OneDarkPro.blue.withValues(alpha: 0.45),
+                              ),
+                            ),
                           )
                         : null,
                     icon: Icon(
@@ -136,7 +146,7 @@ class Sidebar extends StatelessWidget {
                 ),
                 const SizedBox(height: UiTokens.spaceInline),
                 const Text(
-                  'Nova Hub v0.9',
+                  'Nova Hub v0.9.1',
                   textAlign: TextAlign.center,
                   style: AppText.caption,
                 ),
@@ -144,83 +154,6 @@ class Sidebar extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _item(
-    BuildContext context, {
-    required IconData icon,
-    required Color color,
-    required String label,
-    required String subtitle,
-    required bool active,
-    required VoidCallback onTap,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: UiTokens.spaceItemOuterH,
-        vertical: UiTokens.spaceItemOuterV,
-      ),
-      child: Semantics(
-        button: true,
-        selected: active,
-        label: active ? '$label, seleccionado' : label,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(UiTokens.radiusControl),
-          focusColor: OneDarkPro.blueText.withValues(alpha: 0.22),
-          hoverColor: OneDarkPro.cardHover,
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: UiTokens.spaceItemH,
-              vertical: UiTokens.spaceItemV,
-            ),
-            decoration: BoxDecoration(
-              color: active ? OneDarkPro.card : Colors.transparent,
-              borderRadius: BorderRadius.circular(UiTokens.radiusControl),
-              border: Border.all(
-                color: active
-                    ? OneDarkPro.blue.withValues(alpha: 0.45)
-                    : Colors.transparent,
-              ),
-            ),
-            child: Row(
-              children: [
-                ExcludeSemantics(
-                  child: Icon(
-                    icon,
-                    color: color,
-                    size: UiTokens.iconTileSidebar,
-                  ),
-                ),
-                const SizedBox(width: UiTokens.spaceInline),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Tooltip(
-                        message: label,
-                        child: Text(
-                          label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppText.title,
-                        ),
-                      ),
-                      Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppText.caption,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -277,6 +210,136 @@ class Sidebar extends StatelessWidget {
                     border: Border.all(color: OneDarkPro.border),
                   ),
                   child: Text(badge, style: AppText.caps),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Ítem de plataforma del sidebar.
+///
+/// El hover pinta `cardHover` incluso en el ítem activo (antes el relleno
+/// `card` tapaba el resaltado del InkWell y el puntero parecía muerto).
+/// Mientras hay hover el subtítulo sube a `fg`: `fgMid` sobre `cardHover`
+/// da 4.49:1 y no llega a AA; `fg` da 5.5:1. El reposo del ítem inactivo
+/// es `sidebar` (no transparente) para que el fundido no interpole alfa y
+/// oscurezca a mitad de transición.
+class _SidebarItem extends StatefulWidget {
+  final IconData icon;
+  final Color color;
+  final String label;
+  final String subtitle;
+  final bool active;
+  final VoidCallback onTap;
+
+  const _SidebarItem({
+    required this.icon,
+    required this.color,
+    required this.label,
+    required this.subtitle,
+    required this.active,
+    required this.onTap,
+  });
+
+  @override
+  State<_SidebarItem> createState() => _SidebarItemState();
+}
+
+class _SidebarItemState extends State<_SidebarItem> {
+  bool _hovered = false;
+  bool _focused = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final fill = _hovered
+        ? OneDarkPro.cardHover
+        : (widget.active ? OneDarkPro.card : OneDarkPro.sidebar);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: UiTokens.spaceItemOuterH,
+        vertical: UiTokens.spaceItemOuterV,
+      ),
+      child: Semantics(
+        button: true,
+        selected: widget.active,
+        label: widget.active ? '${widget.label}, seleccionado' : widget.label,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(UiTokens.radiusControl),
+          focusColor: OneDarkPro.blueText.withValues(alpha: 0.22),
+          // El relleno lo pinta el AnimatedContainer: así el hover se ve
+          // sobre el fondo `card` del ítem activo.
+          hoverColor: Colors.transparent,
+          onHover: (hovering) => setState(() => _hovered = hovering),
+          onFocusChange: (focused) => setState(() => _focused = focused),
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: UiTokens.motionHover,
+            curve: UiTokens.motionHoverCurve,
+            padding: const EdgeInsets.symmetric(
+              horizontal: UiTokens.spaceItemH,
+              vertical: UiTokens.spaceItemV,
+            ),
+            decoration: BoxDecoration(
+              color: fill,
+              borderRadius: BorderRadius.circular(UiTokens.radiusControl),
+              border: Border.all(
+                color: widget.active
+                    ? OneDarkPro.blue.withValues(alpha: 0.45)
+                    : Colors.transparent,
+              ),
+            ),
+            // Anillo de foco por teclado (2 px `blueText`). Va en
+            // `foregroundDecoration` para no alterar el inset del borde
+            // activo ni el tamaño del ítem.
+            foregroundDecoration: _focused
+                ? BoxDecoration(
+                    borderRadius: BorderRadius.circular(
+                      UiTokens.radiusControl,
+                    ),
+                    border: Border.all(
+                      color: OneDarkPro.blueText,
+                      width: UiTokens.borderFocus,
+                    ),
+                  )
+                : null,
+            child: Row(
+              children: [
+                ExcludeSemantics(
+                  child: Icon(
+                    widget.icon,
+                    color: widget.color,
+                    size: UiTokens.iconTileSidebar,
+                  ),
+                ),
+                const SizedBox(width: UiTokens.spaceInline),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Tooltip(
+                        message: widget.label,
+                        child: Text(
+                          widget.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppText.title,
+                        ),
+                      ),
+                      Text(
+                        widget.subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: _hovered
+                            ? AppText.caption.copyWith(color: OneDarkPro.fg)
+                            : AppText.caption,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

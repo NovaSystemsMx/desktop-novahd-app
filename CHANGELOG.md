@@ -1,5 +1,37 @@
 # CHANGELOG - Nova Hub Downloader
 
+## v0.9.1 — Copy, mínimo de ventana y hovers
+
+- Copy de Ajustes más corto y directo: `Abrir YouTube` y `Guardar` (antes
+  `Abrir YouTube para iniciar sesión` y `Guardar cookies`). Los labels de
+  botón caben sin truncarse ni encogerse.
+- La acción de la tabla mantiene una caja fija de 128 × 40: el aviso
+  `En cola` mide igual que el botón `Descargar` y encolar una pista ya no
+  mueve la fila (E8).
+- La ruta de descargas se muestra también con la cola vacía (divider +
+  ruta con ellipsis y tooltip), para dar contexto del destino antes de
+  descargar (E9). El vacío de la cola lleva scroll de seguridad a alto
+  mínimo.
+- Mínimo de ventana plano de 1152 × 640 lógicos (antes dependía de la
+  escala): la cola ya no se apila en uso normal y la vista no cambia de
+  forma al redimensionar (E10).
+- Vuelven los hovers esenciales, sutiles y animados a 160 ms con
+  `Curves.easeOut`, sin parpadeo: la fila de resultados parte de `sidebar`
+  (no transparente) y funde a `card`; el ítem del sidebar funde a
+  `cardHover`, también el activo (el subtítulo sube a `fg` para conservar
+  AA 4.5:1). Los botones recuperan un hover perceptible: el primario
+  aclara con `white` 15 % (el label sube a 7.0:1) y outlined/text/icono
+  rellenan `cardHover`. La cola y los vacíos no llevan hover (no son
+  interactivos).
+- Foco por teclado visible en todos los controles: borde de 2 px dentro
+  de la forma (`blueText`; `darker` sobre los primarios claros) más
+  cambio de relleno, y pressed explícito (el primario azul oscurece con
+  `darker` 10 %; outlined/text/icono usan `blueText` 12 %). El ítem del
+  sidebar y el botón Ajustes activo también muestran el anillo.
+- El botón `Abrir YouTube` usa el primario azul del tema con texto
+  `darker` (6.38:1), igual que `Guardar`. Se retira el rojo de marca:
+  desaparecen `buttonRed`, `onBrand` y su regla de contrato.
+
 ## v0.9 — Correcciones de layout y descargas
 
 - Corrige el desbordamiento de 1 px en los tiles de la cola: el borde
@@ -54,7 +86,7 @@
   badges "Pronto"; status bar 36px con punto-anillo; tildes en copias.
 - Ajustes con flujo ordenado (pasos → acción), cards con header
   full-bleed, campo de cookies con label y Paso 3; login en rojo
-  de marca con texto negro.
+  de marca con texto negro (revertido en v0.9.1).
 - Ventana con tamaño inicial y mínimo según escala del display
   (100/125/150/200%) vía `window_manager` + `screen_retriever`.
 - Cola apilada bajo 860px de contenido en ventanas angostas.

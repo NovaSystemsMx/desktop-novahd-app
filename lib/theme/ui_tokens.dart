@@ -153,6 +153,15 @@ abstract final class UiTokens {
   static const double borderWidth = 1;
   static const double borderFocus = 2;
 
+  // ── Movimiento ───────────────────────────────────────────────────────
+
+  /// Transición de hover (fila de resultados, ítem del sidebar).
+  static const Duration motionHover = Duration(milliseconds: 160);
+
+  /// Salida rápida y frenada suave, para que el hover siga al puntero sin
+  /// sentirse instantáneo ni arrastrado.
+  static const Curve motionHoverCurve = Curves.easeOut;
+
   // ── Responsive (ancho de CONTENIDO, no de ventana) ───────────────────
 
   /// Por debajo de este ancho la cola de descargas se apila.

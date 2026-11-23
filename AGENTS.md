@@ -96,8 +96,16 @@ Estándar vigente: **40/14/64** (M3 40 · Carbon md 40 · Fluent large 40). Ver 
 - v0.9: tile de cola corregido (borde en `foregroundDecoration`;
   64 de caja con 40 útiles), insignia de completado vectorial, status bar
   solo en Spotify y descarga con cookies arreglada (`--cookies` + cabecera
-  Netscape + filas `#HttpOnly_`). Hover/focus (P1) y contraste
-  `cardHover` (P2) siguen abiertos.
+  Netscape + filas `#HttpOnly_`).
+- v0.9.1: copy corto en Ajustes, acción de tabla de caja fija (E8), ruta
+  destino siempre visible en la cola (E9), mínimo de ventana plano
+  1152×640 (E10) y hover animado a 160 ms en filas, sidebar y botones.
+  P1 cerrado: foco por teclado con borde de 2 px + relleno de foco y
+  pressed explícito en botones e ítem del sidebar; E11 documenta que el
+  hover opaco tapa el anillo en outlined/text/icono y su arreglo queda
+  para Fase 4. El primario de marca se retiró: `Abrir YouTube` usa el
+  azul del tema con texto `darker`, igual que los demás; no queda regla
+  de rojo de marca. P2 documenta los contrastes medidos sobre `cardHover`.
 - La consola conserva `yellow` como texto por la excepción E7; no añadir
   más usos.
 - No hacer `git add` / `git commit` sin pedido explícito.

@@ -1,6 +1,6 @@
 # Reglas de UI — contrato para agentes
 
-Versión 2 · 2026-10-25 · Nova Hub Downloader v0.9
+Versión 2 · 2026-11-17 · Nova Hub Downloader v0.9.1
 
 Base: convergencia de **Material 3 (40)**, **Carbon md (40)** y **Fluent
 large (40)**, sobre retícula de 4/8. Controles de 40, cuerpo 14, caption 12
@@ -132,6 +132,13 @@ en un rol, se discute y se añade el token; no se escribe el número.
 El tooltip usa radio 6 y el diálogo 12; ambos se fijan en el tema, no en
 la vista.
 
+**Movimiento.** `motionHover` (160 ms, `Curves.easeOut`) es la única
+transición de color admitida: se usa para el fundido del hover (fila de
+tabla e ítem del sidebar) vía `AnimatedContainer`. La curva arranca rápido
+y frena suave, de modo que el resaltado sigue al puntero sin sentirse
+instantáneo ni arrastrado. No se anima el layout ni se escriben `Duration`
+o `Curve` sueltos en vistas o widgets.
+
 ### 2.4 Iconos
 
 | Token | Valor | Elemento |
@@ -184,7 +191,6 @@ Reglas:
 | Acento rojo (texto) | `redText` |
 | Acento verde (texto) | `greenText` |
 | Fondo primario azul | `buttonBlue` + texto `darker` |
-| Fondo primario de marca | `buttonRed` + texto `darker` |
 | Hover de card/ítem | `cardHover` |
 | Tonos base (`blue`, `red`, `green`, `yellow`) | solo fondos, bordes e iconos decorativos |
 
@@ -217,10 +223,10 @@ Variantes alfa aprobadas (siempre sobre un token de la paleta):
 
 | Alpha | Uso |
 |---:|---|
-| 0.10 | fondo del banner de error (`red`) |
-| 0.12 | fondo de “en cola” / highlight (`blue`, `blueText`) |
-| 0.15 | fondo de tile decorativo (`blue`) |
-| 0.22 | anillo de foco (`blueText`) |
+| 0.10 | fondo del banner de error (`red`); pressed/foco del primario azul (`darker`) |
+| 0.12 | fondo de “en cola” / highlight (`blue`, `blueText`); pressed/foco de botón sin relleno (`blueText`) |
+| 0.15 | fondo de tile decorativo (`blue`); hover de botón primario (`white`) |
+| 0.22 | tinte de foco de `InkWell` (ítem del sidebar); el foco de botón usa borde de 2 px |
 | 0.40 | borde de marca / error (`blue`, `red`) |
 | 0.45 | borde de ítem activo / punto de estado (`blue`) |
 | 0.55 | icono deshabilitado (`fgDim`) |
@@ -239,12 +245,17 @@ el de la ventana. Usar `LayoutBuilder`, no `MediaQuery.size`.
 | `queueNarrow` | 320 | cola entre 820 y 1000 |
 | `queueWide` | 360 | cola desde 1000 |
 
-Al apilar, la tabla y la cola se reparten con `Expanded(flex: 1)` y
-`Expanded(flex: 1)`; nunca una cola de alto fijo que ahogue la tabla. El
-reparto 3:2 se probó a 1100×630 y desbordaba el vacío de la cola; 1:1
-deja 168 lógicos para cada panel, suficiente para el vacío compacto.
-Por encima de 820 el peor caso es tabla ≈ 484 y cola 320: con `CANCIÓN` y
-acción 128 la tabla sigue siendo legible.
+La ventana no baja de **1152×640 lógicos** (`lib/main.dart`): con el
+marco de Windows, el contenido mínimo queda en ~833, por encima de
+`stackBelow` (820), así que la cola siempre se ve al lado de la tabla y
+la vista cambia de tamaño, no de forma. `stackBelow` queda solo como red
+de seguridad (ventana forzada por debajo del mínimo); no se alcanza en
+uso normal. Si alguna vez se apila, la tabla y la cola se reparten con
+`Expanded(flex: 1)` y `Expanded(flex: 1)`; nunca una cola de alto fijo
+que ahogue la tabla. El reparto 3:2 se probó a 1100×630 y desbordaba el
+vacío de la cola; 1:1 deja 168 lógicos para cada panel, suficiente para
+el vacío compacto. En el mínimo el reparto es tabla ≈ 498 y cola 320: con
+`CANCIÓN` y acción 128 la tabla sigue siendo legible.
 
 Columnas de tabla: portada 40 + gap 12, duración 72, acción 128; título y
 álbum a flex igual. Nunca anchos fijos que sumen más que el contenedor.
@@ -420,18 +431,41 @@ Row(
 | Tipo | Fondo | Texto | Borde | Icono | Alto | Padding |
 |---|---|---|---|---:|---:|---|
 | Primario azul | `buttonBlue` | `darker` | — | 16 | 40 | 16/10 |
-| Primario marca | `buttonRed` | `darker` | — | 16 | 40 | 16/10 |
 | Outlined | transparente | `fg` | `border` 1 | 16 | 40 | 16/10 |
 | Text | transparente | `blueText` | — | 16 | 40 | 12/10 |
 | Icono de header | transparente | `blueText` / `fgDim` | — | 16 | hit 32 | 0 |
 
 - Todos: label `body` 14/w500, radio 8, una sola línea (sin truncar).
+- Estados explícitos en el tema (el overlay derivado por M3 al 8 % no se
+  percibe sobre un relleno sólido):
+  - Hover del primario azul: `white` 15 %; el label `darker` sube de
+    6.38:1 a ~7.0:1.
+  - Hover outlined/text/icono: relleno `cardHover` (mismo token que el
+    hover de ítem), sin tocar el color del texto.
+  - Pressed del primario azul: `darker` 10 % (oscurece; no se confunde con
+    el hover que aclara).
+    Outlined/text/icono: `blueText` 12 %.
+  - Foco: borde de 2 px dentro de la forma (`UiTokens.borderFocus`) más
+    relleno de foco. `blueText` en fondos oscuros (5.6:1–7.3:1) y
+    `darker` en el primario claro (6.38:1 en `buttonBlue`). El azul
+    oscurece el relleno (`darker` 10 %) para que el anillo no se lea como
+    sombra; el resto usa `blueText` 12 %.
+- Un botón con `styleFrom` propio (Ajustes activo) debe añadir vía
+  `.copyWith(...)` un `overlayColor` (`primaryButtonOverlay` o
+  `plainButtonOverlay`) **y** `side: focusRing(...)`: `styleFrom` deriva su
+  propio overlay del 8 % y fija `side`, así que sin sustituirlos se
+  pierden hover/pressed y el anillo de foco del tema.
+- El hover opaco de outlined/text/icono puede tapar el anillo mientras el
+  puntero está encima (E11, `borderOnForeground: false`); el relleno de
+  foco mantiene la señal. Con teclado y puntero fuera el anillo se ve
+  completo.
 - Deshabilitado: `disabledBackgroundColor: card`,
   `disabledForegroundColor: fgDim` (tema), nunca `Opacity` sobre texto.
 - Los `IconButton` usan `tapTargetSize: shrinkWrap` y `minimumSize: 32`
   desde `iconButtonTheme`; si se omite, M3 los infla a 48 y rompe el header.
 - Nada de `fontWeight: w600` puntual.
-- Un solo color de texto para primarios: `darker` (no `#000`).
+- El texto del primario es `darker` sobre `buttonBlue` (6.38:1), elegido
+  por contraste. Todos los primarios comparten este estilo del tema.
 
 ### 3.7 Estado vacío
 
@@ -468,9 +502,18 @@ Center(
 - Fila: 64 de alto, `paddingRow` (16/12), divisor 1 `border` con indent 16.
 - Portada 40 radio 8; gap 12; título `title` + artista `secondary` con gap
   2; álbum `body`; duración `body`; acción 128.
-- Botón de acción natural (≈118) alineado a la derecha; el label
-  `Descargar` no se trunca. Chip `En cola` de 40.
+- Acción de fila: botón `Descargar` y aviso `En cola` comparten caja
+  (`colAction` 128 × 40) con el contenido centrado. El aviso no mide su
+  contenido natural: así el cambio de estado no mueve la fila (E8). El
+  label `Descargar` no se trunca.
 - Datos (título, artista, álbum) con `maxLines: 1` + ellipsis + `Tooltip`.
+- Hover de fila: relleno `card` sobre el `sidebar` de la card, animado con
+  `motionHover` (160 ms, `easeOut`). La fila **no** es clicable: sin cursor
+  de mano, sin `InkWell` y sin acción; el hover solo ayuda a seguir la fila
+  al leer. Se usa `card` y no `cardHover` porque `fgMid` sobre `cardHover`
+  da 4.49:1 y no llega a AA (sobre `card` da 4.96:1). El color de reposo es
+  `sidebar` (no transparente): animar desde alfa 0 oscurece la fila a mitad
+  de transición.
 - Vacío: receta 3.7.
 - Sin cebreado, sin sombras, sin bordes internos.
 
@@ -491,8 +534,11 @@ Center(
   + check 12 en `darker`), **no** el glifo `check_circle_rounded`: a 125%
   el disco mide 22.5 px y el hinting del glifo aplana su base en una línea
   dura, así que el icono se ve cortado por abajo.
-- Vacío: receta 3.7. Footer (ruta `caption` con ellipsis + tooltip) **solo
-  si hay tareas**; en vacío se oculta para no desbordar a 1100×630.
+- Vacío: receta 3.7. Footer siempre visible: divider + ruta de destino
+  (`caption`, ellipsis + tooltip), también con la cola vacía; la ruta se
+  trunca dentro de la columna, nunca hace crecer el panel. En el alto
+  mínimo (1100×630) el vacío va sin inset vertical y con scroll de
+  seguridad: no desborda (E9).
 - El contador no se trunca: va en un `Text`/badge separado del título.
 
 ### 3.10 Sidebar
@@ -505,6 +551,14 @@ Center(
   label de una línea con ellipsis + tooltip si no cabe.
 - **Estado activo único**: fondo `card` + borde `blue` 45% +
   `Semantics(selected: true)`. Sin punto indicador aparte.
+- Hover: relleno `cardHover` animado con `motionHover` (160 ms,
+  `easeOut`), también sobre el ítem activo (el relleno lo pinta un
+  `AnimatedContainer`, no el `hoverColor` del `InkWell`, que quedaría
+  tapado por `card`). El reposo del ítem inactivo es `sidebar`, no
+  transparente, para que el fundido no oscurezca al interpolar alfa.
+  Mientras hay hover el subtítulo sube de `fgMid` a `fg`: `fgMid` sobre
+  `cardHover` da 4.49:1 y no pasa AA; `fg` da 5.53:1. El label ya es
+  `white`.
 - Ajustes usa el mismo estado activo cuando está seleccionado (fondo card,
   borde azul 45%, label blanco, icono `blue`) y el mismo ancho exterior de 8
   que los ítems; no se mete en un padding de 12.
@@ -531,8 +585,8 @@ Si un widget nuevo trae un default de M3, **primero** se fija en el tema.
 
 ## 4. Copy
 
-- Sentence case: `Iniciar sesión`, `Guardar cookies`, `Abrir descargas`,
-  `Abrir YouTube para iniciar sesión`.
+- Sentence case: `Iniciar sesión`, `Guardar`, `Abrir descargas`,
+  `Abrir YouTube`.
 - Tildes siempre: `búsqueda`, `álbum`, `canción`, `duración`, `acción`.
 - Puntos suspensivos: `…` (no `...`).
 - Un verbo por acción; el botón dice exactamente lo que hace (si solo
@@ -576,8 +630,12 @@ cambia el copy: **nunca ellipsis**.
 - `Semantics(selected: true)` en el ítem activo del sidebar (y en Ajustes).
 - `liveRegion: true` en errores y en “Buscando”.
 - Tooltip obligatorio en todo botón que solo tenga icono.
-- Foco visible: borde 2 px `blueText`; no eliminarlo con `focusColor`
-  transparente.
+- Foco visible: borde de 2 px dentro de la forma (`blueText`; `darker`
+  sobre los primarios claros) más cambio de relleno. El hover opaco de
+  outlined/text/icono puede taparlo mientras el puntero está encima
+  (E11); el relleno mantiene la señal. El arreglo definitivo —anillo en
+  `foregroundDecoration`— va en Fase 4 con los botones compartidos. No
+  eliminar el foco con `focusColor` transparente.
 - Contraste mínimo 4.5:1 en texto normal y 3:1 en texto grande/iconos.
 - Deshabilitado: color explícito; si se usa `Opacity`, mínimo 0.65 y
   nunca sobre texto que deba leerse.
@@ -697,7 +755,7 @@ E7 de color. Cualquier código nuevo ya debe usar tokens.
 | 08 | Gap de bloque 16, nunca 18 | Ritmo único (A8). |
 | 09 | Cola 320/360, apilar bajo 820 y reparto 1:1 | Evita el acantilado del breakpoint 860 (G1) y el tile fijo que ahogaba la tabla. 1:1 se verificó a 1100×630: 3:2 desbordaba el vacío de la cola. |
 | 10 | Tooltip, TextButton, IconButton y botones pinneados | M3 pinta tooltips blancos, TextButton azul base e IconButton de 48 (I1, I2). |
-| 11 | Texto de primarios = `darker` | Unifica azul y rojo (B4). |
+| 11 | Texto del primario = `darker` sobre `buttonBlue` (6.38:1) | Todos los primarios comparten el estilo del tema. Antes existía un primario de marca con `onBrand`; retirado en v0.9.1. |
 | 12 | Mono 12 en consola y cookies | Elimina 12/11 (D4). |
 | 13 | Copy sentence case + `…` | Coherencia (H1–H4). |
 | 14 | Status bar por vista | “Listo para buscar” no aplica en Ajustes (H5). |
@@ -706,6 +764,8 @@ E7 de color. Cualquier código nuevo ya debe usar tokens.
 | 17 | Alturas fijas (40/64/48) + copy corto + dato truncado con tooltip | Norma desktop; el copy de UI cabe, el dato de usuario trunca. Si se habilita escalado de texto, migrar a `minHeight` (WCAG 1.4.4/F69). |
 | 18 | Estándar 40/14/64: controles 40, cuerpo 14, caption 12, filas de dos líneas 64, header 40, top 48, status 32, sidebar 256 | Adopta la convergencia de las grandes empresas (M3 40, Carbon md 40, Fluent large 40) en lugar de los 48/68/22 locales. Da densidad desktop, targets AA y una escala tipográfica reconocible. Reemplaza ADR 01/03/04/05/17 en sus valores. |
 | 19 | Excepción de color: `yellow` base como texto solo en el warning de consola | No hay `yellowText` en la paleta; contraste ~5.1:1. Es el único punto; si se aprueba `yellowText`, se migra y se elimina la excepción (E7). |
+| 20 | _Retirada (v0.9.1)_ | El primario de marca rojo (`buttonRed`/`onBrand`) se elimina a petición de producto: `Abrir YouTube` usa el primario azul del tema. |
+| 21 | Anillo de foco en `foregroundDecoration` para botones compartidos | El `side` del tema queda bajo el hover opaco (E11); se aplicará al extraer los botones en Fase 4. |
 
 ---
 

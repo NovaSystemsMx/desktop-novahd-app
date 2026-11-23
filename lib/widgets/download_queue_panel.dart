@@ -113,25 +113,39 @@ class DownloadQueuePanel extends StatelessWidget {
                   ),
                 ),
                 if (q.isEmpty)
-                  const Expanded(
-                    child: Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(UiTokens.spaceBlock),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            ExcludeSemantics(
-                              child: EmptyIconTile(
-                                icon: Icons.downloading_rounded,
+                  Expanded(
+                    // E9: con el footer fijo, a 1100×630 el vacío se queda
+                    // corto; sin inset vertical y con scroll de seguridad
+                    // nunca desborda (holgado se ve igual: va centrado).
+                    child: LayoutBuilder(
+                      builder: (context, constraints) => SingleChildScrollView(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight,
+                          ),
+                          child: Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: UiTokens.spaceBlock,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  ExcludeSemantics(
+                                    child: EmptyIconTile(
+                                      icon: Icons.downloading_rounded,
+                                    ),
+                                  ),
+                                  SizedBox(height: UiTokens.spaceEmptyGap),
+                                  Text(
+                                    'La cola está vacía. Descarga cualquier resultado y aparecerá aquí con su progreso.',
+                                    textAlign: TextAlign.center,
+                                    style: AppText.secondary,
+                                  ),
+                                ],
                               ),
                             ),
-                            SizedBox(height: UiTokens.spaceEmptyGap),
-                            Text(
-                              'La cola está vacía. Descarga cualquier resultado y aparecerá aquí con su progreso.',
-                              textAlign: TextAlign.center,
-                              style: AppText.secondary,
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
@@ -150,26 +164,26 @@ class DownloadQueuePanel extends StatelessWidget {
                           _QueueTile(key: ValueKey(q[i].id), task: q[i]),
                     ),
                   ),
-                if (q.isNotEmpty) ...[
-                  const Divider(height: UiTokens.borderWidth),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      UiTokens.spaceCard,
-                      UiTokens.spaceBadgeH,
-                      UiTokens.spaceCard,
-                      UiTokens.spaceInline,
-                    ),
-                    child: Tooltip(
-                      message: dl.downloadDir.path,
-                      child: Text(
-                        dl.downloadDir.path,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppText.caption,
-                      ),
+                // Excepción E9: la ruta de destino se muestra también con
+                // la cola vacía (contexto útil antes de descargar).
+                const Divider(height: UiTokens.borderWidth),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    UiTokens.spaceCard,
+                    UiTokens.spaceBadgeH,
+                    UiTokens.spaceCard,
+                    UiTokens.spaceInline,
+                  ),
+                  child: Tooltip(
+                    message: dl.downloadDir.path,
+                    child: Text(
+                      dl.downloadDir.path,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.caption,
                     ),
                   ),
-                ],
+                ),
               ],
             ),
           ),

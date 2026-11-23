@@ -52,7 +52,7 @@ class _NovadhAppShellState extends State<NovadhAppShell> {
                       const SizedBox(width: UiTokens.spaceInline),
                       Expanded(
                         child: Text(
-                          'Nova Hub Downloader — Windows v0.9',
+                          'Nova Hub Downloader - Windows v0.9.1',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppText.caption,
